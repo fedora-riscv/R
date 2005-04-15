@@ -1,6 +1,6 @@
 Name: R
 Version: 2.0.1
-Release: 10
+Release: 11
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -9,12 +9,13 @@ Patch1: R-2.0.1-gcc4.patch
 License: GPL
 Group: Applications/Engineering
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: gcc-gfortran
+BuildRequires: gcc-g77
 BuildRequires: gcc-c++, tetex-latex, texinfo 
 BuildRequires: libpng-devel, libjpeg-devel, readline-devel, libtermcap-devel
-BuildRequires: XFree86-devel
-BuildRequires: tcl-devel, tk-devel
-Requires: evince, cups, firefox
+BuildRequires: XFree86-devel, libglade-devel
+BuildRequires: tcl-devel, tk-devel, gnome-libs-devel
+BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
+Requires: ggv, cups, firefox
 
 # These are the submodules that R provides. Sometimes R modules say they
 # depend on one of these submodules rather than just R. These are 
@@ -68,7 +69,7 @@ Summary: files for development of R packages.
 Group: Applications/Engineering
 Requires: R = %{version}
 # You need all the BuildRequires for the development version
-Requires: gcc-c++, gcc-gfortran, tetex-latex, texinfo 
+Requires: gcc-c++, gcc-g77, tetex-latex, texinfo 
 Requires: libpng-devel, libjpeg-devel, readline-devel, libtermcap-devel
 Requires: XFree86-devel
 Requires: tcl-devel, tk-devel
@@ -79,6 +80,7 @@ Install R-devel if you are going to develop or compile R packages.
 %package -n libRmath
 Summary: standalone math library from the R project
 Group: Development/Libraries
+
 %description -n libRmath
 A standalone library of mathematical and statistical functions derived
 from the R project.  This packages provides the shared libRmath library.
@@ -87,6 +89,7 @@ from the R project.  This packages provides the shared libRmath library.
 Summary: standalone math library from the R project
 Group: Development/Libraries
 Requires: libRmath = %{version}
+
 %description -n libRmath-devel
 A standalone library of mathematical and statistical functions derived
 from the R project.  This packages provides the static libRmath library
@@ -98,10 +101,10 @@ and header files.
 %patch1 -p1
 
 %build
-export R_PDFVIEWER="%{_bindir}/evince"
+export R_PDFVIEWER="%{_bindir}/ggv"
 export R_PRINTCMD="lpr"
 export R_BROWSER="%{_bindir}/firefox"
-export F77="gfortran"
+export F77="g77"
 ( %configure \
     --with-tcl-config=%{_libdir}/tclConfig.sh \
     --with-tk-config=%{_libdir}/tkConfig.sh \
@@ -209,6 +212,11 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Thu Apr 14 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.0.1-11
+- little bump. This is the fc3 package.
+- callout to ggv (fc3) instead of evince (fc4)
+- BuildRequires: gcc-g77 instead of gcc-gfortran
+
 * Thu Apr 14 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.0.1-10
 - bump for cvs errors
 
