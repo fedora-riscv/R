@@ -1,6 +1,6 @@
 Name: R
 Version: 2.0.1
-Release: 11
+Release: 12
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -108,6 +108,7 @@ export F77="g77"
 ( %configure \
     --with-tcl-config=%{_libdir}/tclConfig.sh \
     --with-tk-config=%{_libdir}/tkConfig.sh \
+    --with-gnome \
     --enable-R-shlib )\
  | egrep '^R is now|^ |^$' - > CAPABILITIES
 make 
@@ -212,6 +213,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Sun Apr 17 2005 Gerard Milmeister <gemi@bluewin.ch> - 2.0.1-12
+- enable gnome gui (--with-gnome)
+
 * Thu Apr 14 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.0.1-11
 - little bump. This is the fc3 package.
 - callout to ggv (fc3) instead of evince (fc4)
