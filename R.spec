@@ -1,6 +1,6 @@
 Name: R
 Version: 2.2.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -218,6 +218,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Thu Oct  6 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.2.0-2
+- use fixed system lapack for FC-4 and devel
+
 * Thu Oct  6 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.2.0-1
 - bump to 2.2.0
 
