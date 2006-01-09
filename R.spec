@@ -1,6 +1,6 @@
 Name: R
 Version: 2.2.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -218,6 +218,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Mon Jan  9 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.2.1-3
+- fix BR: XFree86-devel for FC-5
+
 * Sat Dec 31 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.2.1-2
 - missing BR: libXt-devel for FC-5
 
