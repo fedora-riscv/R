@@ -1,6 +1,6 @@
 Name: R
-Version: 2.3.0
-Release: 2%{?dist}
+Version: 2.5.1
+Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -14,6 +14,7 @@ BuildRequires: XFree86-devel
 BuildRequires: tcl-devel, tk-devel
 BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
 BuildRequires: java-1.4.2-gcj-compat
+BuildRequires: bzip2-devel
 Requires: ggv, cups, firefox
 
 # These are the submodules that R provides. Sometimes R modules say they
@@ -22,25 +23,27 @@ Requires: ggv, cups, firefox
 Provides: R-base = %{version}
 Provides: R-boot = 1.2
 Provides: R-class = %{version}
-Provides: R-cluster = 1.10.5
+Provides: R-cluster = 1.11.7
+Provides: R-codetools = 0.1
 Provides: R-datasets = %{version}
 Provides: R-foreign = 0.8
 Provides: R-graphics = %{version}
 Provides: R-grDevices = %{version}
 Provides: R-grid = %{version}
 Provides: R-KernSmooth = 2.22
-Provides: R-lattice = 0.13
+Provides: R-lattice = 0.15
 Provides: R-MASS = %{version}
 Provides: R-methods = %{version}
 Provides: R-mgcv = 1.3
 Provides: R-nlme = 3.1
 Provides: R-nnet = %{version}
+Provides: R-rcompgen = 0.1
 Provides: R-rpart = 3.1
 Provides: R-spatial = %{version}
 Provides: R-splines = %{version}
 Provides: R-stats = %{version}
 Provides: R-stats4 = %{version}
-Provides: R-survival = 2.24
+Provides: R-survival = 2.32
 Provides: R-tcltk = %{version}
 Provides: R-tools = %{version}
 Provides: R-utils = %{version}
@@ -71,7 +74,8 @@ Requires: R = %{version}
 Requires: gcc-c++, gcc-g77, tetex-latex, texinfo 
 Requires: libpng-devel, libjpeg-devel, readline-devel, libtermcap-devel
 Requires: XFree86-devel
-Requires: tcl-devel, tk-devel
+Requires: bzip2-devel
+Requires: tcl-devel, tk-devel, pkgconfig
 
 %description devel
 Install R-devel if you are going to develop or compile R packages.
@@ -87,7 +91,7 @@ from the R project.  This packages provides the shared libRmath library.
 %package -n libRmath-devel
 Summary: standalone math library from the R project
 Group: Development/Libraries
-Requires: libRmath = %{version}
+Requires: libRmath = %{version}, pkgconfig
 
 %description -n libRmath-devel
 A standalone library of mathematical and statistical functions derived
@@ -95,9 +99,12 @@ from the R project.  This packages provides the static libRmath library
 and header files.
 
 %prep
-%setup -q 
+%setup -q
 
 %build
+# Add PATHS to Renviron for R_LIBS
+echo 'R_LIBS=${R_LIBS-'"'%{_libdir}/R/library:%{_datadir}/R/library'"'}' >> etc/Renviron.in
+
 export R_PDFVIEWER="%{_bindir}/ggv"
 export R_PRINTCMD="lpr"
 export R_BROWSER="%{_bindir}/firefox"
@@ -107,7 +114,7 @@ export F77="g77"
     --with-tcl-config=%{_libdir}/tclConfig.sh \
     --with-tk-config=%{_libdir}/tkConfig.sh \
     --enable-R-shlib )\
- | egrep '^R is now|^ |^$' - > CAPABILITIES
+ | grep -A30 'R is now' - > CAPABILITIES
 make 
 (cd src/nmath/standalone; make)
 #make check-all
@@ -134,6 +141,12 @@ sed -e "s@R_HOME_DIR=.*@R_HOME_DIR=%{_libdir}/R@" < bin/R \
 chmod 755 ${RPM_BUILD_ROOT}%{_libdir}/R/bin/R 
 chmod 755 ${RPM_BUILD_ROOT}%{_bindir}/R
 
+# Get rid of buildroot in script
+for i in $RPM_BUILD_ROOT%{_libdir}/R/bin/Rscript $RPM_BUILD_ROOT%{_bindir}/Rscript $RPM_BUILD_ROOT%{_libdir}/pkgconfig/libR*.pc;
+do
+  sed -i "s|$RPM_BUILD_ROOT||g" $i;
+done
+
 # Remove package indices. They are rebuilt by the postinstall script.
 #
 rm -f ${RPM_BUILD_ROOT}%{_libdir}/R/doc/html/function.html
@@ -147,9 +160,13 @@ rm -f ${RPM_BUILD_ROOT}%{_libdir}/R/doc/html/search/index.txt
 mkdir -p $RPM_BUILD_ROOT/etc/ld.so.conf.d
 echo "%{_libdir}/R/lib" > $RPM_BUILD_ROOT/etc/ld.so.conf.d/%{name}-%{_arch}.conf
 
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/R/library
+
 %files
 %defattr(-, root, root)
 %{_bindir}/R
+%{_bindir}/Rscript
+%{_datadir}/R
 %{_libdir}/R
 %{_infodir}/R-*.info*
 %{_mandir}/man1/*
@@ -165,6 +182,7 @@ echo "%{_libdir}/R/lib" > $RPM_BUILD_ROOT/etc/ld.so.conf.d/%{name}-%{_arch}.conf
 %files devel
 %defattr(-, root, root)
 %doc doc/manual/R-exts.pdf
+%{_libdir}/pkgconfig/libR.pc
 
 %files -n libRmath
 %defattr(-, root, root)
@@ -174,6 +192,7 @@ echo "%{_libdir}/R/lib" > $RPM_BUILD_ROOT/etc/ld.so.conf.d/%{name}-%{_arch}.conf
 %defattr(-, root, root)
 %{_libdir}/libRmath.a
 %{_includedir}/Rmath.h
+%{_libdir}/pkgconfig/libRmath.pc
 
 %clean
 rm -rf ${RPM_BUILD_ROOT};
@@ -184,7 +203,7 @@ rm -rf ${RPM_BUILD_ROOT};
 for doc in admin exts FAQ intro lang; do
    file=%{_infodir}/R-${doc}.info.gz
    if [ -e $file ]; then
-      /sbin/install-info ${file} %{_infodir}/dir 2>/dev/null
+      /sbin/install-info ${file} %{_infodir}/dir 2>/dev/null || :
    fi
 done
 /sbin/ldconfig
@@ -199,7 +218,7 @@ if [ $1 = 0 ]; then
    for doc in admin exts FAQ intro lang; do
       file=%{_infodir}/R-${doc}.info.gz
       if [ -e ${file} ]; then
-         /sbin/install-info --delete R-${doc} %{_infodir}/dir 2>/dev/null
+         /sbin/install-info --delete R-${doc} %{_infodir}/dir 2>/dev/null || :
       fi
    done
    # Remove package indices
@@ -218,11 +237,49 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Mon Jul  2 2007 Tom "spot" Callaway <tcallawa@redhat.com> 2.5.1-1
+- drop patch, upstream fixed
+- bump to 2.5.1
+
+* Fri May 25 2007 Tom "spot" Callaway <tcallawa@redhat.com> 2.5.0-3
+- add missing BR: bzip2-devel, libXmu-devel
+- cleanup macros from changelog
+- switch from termcap to ncurses
+
+* Mon Apr 30 2007 Tom "spot" Callaway <tcallawa@redhat.com> 2.5.0-2
+- patch from Martyn Plummer fixes .pc files
+- add new BR: gcc-objc
+
+* Wed Apr  25 2007 Tom "spot" Callaway <tcallawa@redhat.com> 2.5.0-1
+- bump to 2.5.0
+
+* Tue Mar  13 2007 Tom "spot" Callaway <tcallawa@redhat.com> 2.4.1-4
+- add /usr/share/R/library as a valid R_LIBS directory for noarch bits
+
+* Tue Dec 19 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.4.1-1
+- bump to 2.4.1
+- fix install-info invocations in post/preun (bz 219407)
+
+* Fri Nov  3 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.4.0-2
+- sync with patched 2006-11-03 level to fix PR#9339
+
+* Sun Oct 15 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.4.0-1
+- bump for 2.4.0
+
+* Wed Sep 12 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.3.1-2
+- bump for FC-6
+
+* Fri Jun  2 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.3.1-1
+- bump to 2.3.1
+
 * Tue Apr 25 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.3.0-2
 - fix ppc build for FC-4 (artificial bump for everyone else)
 
 * Mon Apr 24 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.3.0-1
 - bump to 2.3.0 (also, bump module revisions)
+
+* Tue Feb 28 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.2.1-5
+- now BR is texinfo-tex, not texinfo in rawhide
 
 * Tue Feb 28 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.2.1-4
 - bump for FC-5
@@ -248,20 +305,16 @@ fi
 * Mon Jun 20 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.1.1-1
 - bugfix update
 
-* Mon Apr 18 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.1.0-2
-- fix library handling
+* Mon Apr 18 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.1.0-51
+- proper library handling
 
-* Mon Apr 18 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.1.0-1
-- 2.1.0, fc3 package
+* Mon Apr 18 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.1.0-50
+- 2.1.0, fc4 version.
 - The GNOME GUI is unbundled, now provided as a package on CRAN
 
-* Sun Apr 17 2005 Gerard Milmeister <gemi@bluewin.ch> - 2.0.1-12
-- enable gnome gui (--with-gnome)
-
-* Thu Apr 14 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.0.1-11
-- little bump. This is the fc3 package.
-- callout to ggv (fc3) instead of evince (fc4)
-- BuildRequires: gcc-g77 instead of gcc-gfortran
+* Thu Apr 14 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.0.1-50
+- big bump. This is the fc4 package, the fc3 package is 2.0.1-11
+- enable gnome gui, add requires as needed
 
 * Thu Apr 14 2005 Tom "spot" Callaway <tcallawa@redhat.com> 2.0.1-10
 - bump for cvs errors
@@ -361,8 +414,8 @@ fi
   avoiding warnings about UTF-8 locale not being supported
 
 * Mon Mar 15 2004 Martyn Plummer <plummer@iarc.fr>
-- No need to export optimization flags. This is done by %configure
-- Folded info installation into %makeinstall 
+- No need to export optimization flags. This is done by %%configure
+- Folded info installation into %%makeinstall 
 - Check that RPM_BASE_ROOT is not set to "/" before cleaning up
 
 * Thu Feb 03 2004 Martyn Plummer <plummer@iarc.fr>
@@ -371,7 +424,7 @@ fi
 * Tue Feb 03 2004 Martyn Plummer <plummer@iarc.fr>
 - Changes from James Henstridge <james@daa.com.au> to allow building on IA64:
 - Added BuildRequires for tcl-devel tk-devel tetex-latex
-- Use the %configure macro to call the configure script
+- Use the %%configure macro to call the configure script
 - Pass --with-tcl-config and --with-tk-config arguments to configure
 - Set rhome to point to the build root during "make install"
 
