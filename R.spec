@@ -1,6 +1,6 @@
 Name: R
 Version: 2.5.1
-Release: 1%{?dist}
+Release: 1%{?dist}.1
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -109,6 +109,13 @@ export R_PDFVIEWER="%{_bindir}/ggv"
 export R_PRINTCMD="lpr"
 export R_BROWSER="%{_bindir}/firefox"
 export F77="g77"
+# Only broken on EL-4, ppc
+%ifarch ppc
+export CPICFLAGS="-fPIC"
+export FPICFLAGS="-fPIC"
+export FCPICFLAGS="-fPIC"
+export CXXPICFLAGS="-fPIC"
+%endif
 ( %configure \
     --with-system-zlib --with-system-bzlib --with-system-pcre \
     --with-tcl-config=%{_libdir}/tclConfig.sh \
@@ -237,6 +244,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Tue Jul  3 2007 Tom "spot" Callaway <tcallawa@redhat.com> 2.5.1-1.1
+- fix ppc on EL-4
+
 * Mon Jul  2 2007 Tom "spot" Callaway <tcallawa@redhat.com> 2.5.1-1
 - drop patch, upstream fixed
 - bump to 2.5.1
