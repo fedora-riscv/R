@@ -1,6 +1,6 @@
 Name: R
 Version: 2.7.0
-Release: 2%{?dist}
+Release: 2%{?dist}.1
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -277,6 +277,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Tue May 13 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.7.0-2.1
+- fix sources
+
 * Tue May 13 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.7.0-2
 - add patch from Martyn Plummer to avoid possible bad path hardcoding in 
   /usr/bin/Rscript
