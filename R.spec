@@ -1,6 +1,6 @@
 Name: R
 Version: 2.7.2
-Release: 1%{?dist}
+Release: 1%{?dist}.1
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -19,7 +19,7 @@ BuildRequires: tcl-devel, tk-devel
 BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
 BuildRequires: java-1.4.2-gcj-compat
 BuildRequires: XFree86-devel
-BuildRequires: bzip2-devel, cairo-devel
+BuildRequires: bzip2-devel
 Requires: ggv, cups, firefox
 
 # These are the submodules that R provides. Sometimes R modules say they
@@ -75,7 +75,7 @@ Requires: R = %{version}-%{release}
 Requires: gcc-c++, gcc-g77, tetex-latex, texinfo 
 Requires: libpng-devel, libjpeg-devel, readline-devel, libtermcap-devel
 Requires: XFree86-devel
-Requires: bzip2-devel, cairo-devel
+Requires: bzip2-devel
 Requires: tcl-devel, tk-devel, pkgconfig
 
 %description devel
@@ -294,6 +294,10 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Fri Aug 29 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.7.2-1.1
+- EL-4 VERSION
+- no cairo in EL-4
+
 * Fri Aug 29 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.7.2-1
 - EL-4 VERSION
 - update to 2.7.2
