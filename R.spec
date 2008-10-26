@@ -1,30 +1,55 @@
 Name: R
-Version: 2.7.2
-Release: 1%{?dist}.1
+Version: 2.8.0
+Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
 Source1: macros.R
 Source2: R-make-search-index.sh
-# Sent upstream:
-# http://bugs.r-project.org/cgi-bin/R/incoming?id=12636
-Patch0: R-2.7.1-javareconf-tmpfix.patch
+Patch1: R-2.7.2-filter_asoption.patch
+# fix bzlib2 detection, sent upstream 10-26-2008
+Patch2: R-2.8.0-HAVE_BZLIB_H.patch
 License: GPLv2+
 Group: Applications/Engineering
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: gcc-g77
-BuildRequires: gcc-c++, tetex-latex, texinfo 
+BuildRequires: gcc-c++, tetex-latex, texinfo
 BuildRequires: libpng-devel, libjpeg-devel, readline-devel, libtermcap-devel
 BuildRequires: tcl-devel, tk-devel
 BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
 BuildRequires: java-1.4.2-gcj-compat
 BuildRequires: XFree86-devel
 BuildRequires: bzip2-devel
+# R-devel will pull in R-core
+Requires: R-devel = %{version}-%{release}
+# libRmath-devel will pull in libRmath
+Requires: libRmath-devel = %{version}-%{release}
+
+%description
+This is a metapackage that provides both core R userspace and 
+all R development components.
+
+A language and environment for statistical computing and graphics. 
+R is similar to the award-winning S system, which was developed at 
+Bell Laboratories by John Chambers et al. It provides a wide 
+variety of statistical and graphical techniques (linear and
+nonlinear modelling, statistical tests, time series analysis,
+classification, clustering, ...).
+
+R is designed as a true computer language with control-flow
+constructions for iteration and alternation, and it allows users to
+add additional functionality by defining new functions. For
+computationally intensive tasks, C, C++ and Fortran code can be linked
+and called at run time.
+
+%package core
+Summary: The minimal R components necessary for a functional runtime
+Group: Applications/Engineering
 Requires: ggv, cups, firefox
 
-# These are the submodules that R provides. Sometimes R modules say they
-# depend on one of these submodules rather than just R. These are 
-# provided for packager convenience. 
+# These are the submodules that R-core provides. Sometimes R modules say they
+# depend on one of these submodules rather than just R. These are provided for 
+# packager convenience.
 Provides: R-base = %{version}
 Provides: R-boot = 1.2
 Provides: R-class = 7.2
@@ -53,10 +78,10 @@ Provides: R-tools = %{version}
 Provides: R-utils = %{version}
 Provides: R-VR = 7.2
 
-%description
-A language and environment for statistical computing and graphics. 
-R is similar to the award-winning S system, which was developed at 
-Bell Laboratories by John Chambers et al. It provides a wide 
+%description core
+A language and environment for statistical computing and graphics.
+R is similar to the award-winning S system, which was developed at
+Bell Laboratories by John Chambers et al. It provides a wide
 variety of statistical and graphical techniques (linear and
 nonlinear modelling, statistical tests, time series analysis,
 classification, clustering, ...).
@@ -70,7 +95,7 @@ and called at run time.
 %package devel
 Summary: files for development of R packages.
 Group: Applications/Engineering
-Requires: R = %{version}-%{release}
+Requires: R-core = %{version}-%{release}
 # You need all the BuildRequires for the development version
 Requires: gcc-c++, gcc-g77, tetex-latex, texinfo 
 Requires: libpng-devel, libjpeg-devel, readline-devel, libtermcap-devel
@@ -101,7 +126,8 @@ and header files.
 
 %prep
 %setup -q
-%patch0 -p1 -b .javareconf-tmpfix
+%patch1 -p1 -b .filter-little-out
+%patch2 -p1 -b .BZLIB_H
 
 # Filter false positive provides.
 cat <<EOF > %{name}-prov
@@ -144,7 +170,7 @@ case "%{_target_cpu}" in
           export F77="gfortran -m64"
           export FC="gfortran -m64"
       ;;
-      ia64|alpha)
+      ia64|alpha|sh*)
           export CC="gcc"
           export CXX="g++"
           export F77="gfortran"
@@ -211,7 +237,10 @@ for i in $RPM_BUILD_ROOT%{_libdir}/R/library/*/html/*.html; do
 done
 
 %files
-%defattr(-, root, root)
+# Metapackage
+
+%files core
+%defattr(-, root, root, -)
 %{_bindir}/R
 %{_bindir}/Rscript
 %{_datadir}/R
@@ -233,16 +262,16 @@ done
 /etc/ld.so.conf.d/*
 
 %files devel
-%defattr(-, root, root)
+%defattr(-, root, root, -)
 %{_libdir}/pkgconfig/libR.pc
 %{_includedir}/R
 
 %files -n libRmath
-%defattr(-, root, root)
+%defattr(-, root, root, -)
 %{_libdir}/libRmath.so
 
 %files -n libRmath-devel
-%defattr(-, root, root)
+%defattr(-, root, root, -)
 %{_libdir}/libRmath.a
 %{_includedir}/Rmath.h
 %{_libdir}/pkgconfig/libRmath.pc
@@ -250,7 +279,7 @@ done
 %clean
 rm -rf ${RPM_BUILD_ROOT};
 
-%post 
+%post core
 # Create directory entries for info files
 # (optional doc files, so we must check that they are installed)
 for doc in admin exts FAQ intro lang; do
@@ -273,7 +302,7 @@ sed -i "s!../../..!%{_libdir}/R!g" %{_docdir}/R-%{version}/html/search/index.txt
 sed -i "s!../../..!/usr/share/R!g" %{_docdir}/R-%{version}/html/search/index.txt
 
 
-%preun 
+%preun core
 if [ $1 = 0 ]; then
    # Delete directory entries for info files (if they were installed)
    for doc in admin exts FAQ intro lang; do
@@ -284,7 +313,7 @@ if [ $1 = 0 ]; then
    done
 fi
 
-%postun
+%postun core
 /sbin/ldconfig
 
 %post -n libRmath
@@ -294,6 +323,16 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Sun Oct 26 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.8.0-1
+- EL-4 VERSION
+- Update to 2.8.0
+- New subpackage layout: R-core is functional userspace, R is metapackage 
+  requiring everything
+- Fix system bzip2 detection
+
+* Thu Oct 16 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.7.2-2
+- fix sh compile (bz 464055)
+
 * Fri Aug 29 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.7.2-1.1
 - EL-4 VERSION
 - no cairo in EL-4
