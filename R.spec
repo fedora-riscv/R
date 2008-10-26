@@ -1,6 +1,6 @@
 Name: R
 Version: 2.8.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -19,7 +19,7 @@ BuildRequires: tcl-devel, tk-devel
 BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
 BuildRequires: java-1.4.2-gcj-compat
 BuildRequires: XFree86-devel
-BuildRequires: bzip2-devel
+BuildRequires: bzip2-devel, libtiff-devel
 # R-devel will pull in R-core
 Requires: R-devel = %{version}-%{release}
 # libRmath-devel will pull in libRmath
@@ -100,7 +100,7 @@ Requires: R-core = %{version}-%{release}
 Requires: gcc-c++, gcc-g77, tetex-latex, texinfo 
 Requires: libpng-devel, libjpeg-devel, readline-devel, libtermcap-devel
 Requires: XFree86-devel
-Requires: bzip2-devel
+Requires: bzip2-devel, libtiff-devel
 Requires: tcl-devel, tk-devel, pkgconfig
 
 %description devel
@@ -323,6 +323,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Sun Oct 26 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.8.0-2
+- enable libtiff interface
+
 * Sun Oct 26 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.8.0-1
 - EL-4 VERSION
 - Update to 2.8.0
