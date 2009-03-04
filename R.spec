@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.8.1
-Release: 2%{?dist}
+Release: 2%{?dist}.1
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -198,6 +198,7 @@ export FCFLAGS="%{optflags}"
     rincludedir=%{_includedir}/R \
     rsharedir=%{_datadir}/R) \
  | grep -A30 'R is now' - > CAPABILITIES
+cat config.log
 make 
 (cd src/nmath/standalone; make)
 #make check-all
