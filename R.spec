@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.8.1
-Release: 2%{?dist}.1
+Release: 2%{?dist}.2
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -188,7 +188,7 @@ case "%{_target_cpu}" in
 esac
 
 export FCFLAGS="%{optflags}"
-( %configure \
+%configure \
     --with-system-zlib --with-system-bzlib --with-system-pcre \
     --with-lapack \
     --with-tcl-config=%{_libdir}/tclConfig.sh \
@@ -196,9 +196,11 @@ export FCFLAGS="%{optflags}"
     --enable-R-shlib \
     rdocdir=%{_docdir}/R-%{version} \
     rincludedir=%{_includedir}/R \
-    rsharedir=%{_datadir}/R) \
- | grep -A30 'R is now' - > CAPABILITIES
+    rsharedir=%{_datadir}/R
+# ) \
+# | grep -A30 'R is now' - > CAPABILITIES
 cat config.log
+BARF
 make 
 (cd src/nmath/standalone; make)
 #make check-all
