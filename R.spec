@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.8.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -121,7 +121,7 @@ from the R project.  This packages provides the shared libRmath library.
 %package -n libRmath-devel
 Summary: standalone math library from the R project
 Group: Development/Libraries
-Requires: libRmath = %{version}, pkgconfig
+Requires: libRmath = %{version}-%{release}, pkgconfig
 
 %description -n libRmath-devel
 A standalone library of mathematical and statistical functions derived
@@ -293,18 +293,13 @@ for doc in admin exts FAQ intro lang; do
 done
 /sbin/ldconfig
 R CMD javareconf \
-    JAR=%{jar} \
-    JAVA=%{java} \
-    JAVAC=%{javac} \
-    JAVA_HOME=%{java_home}/jre \
-    JAVAH=%{java_home}/bin/javah \
-    JAVA_CPPFLAGS='-I%{java_home}/include\ -I%{java_home}/include/linux' \
-    JAVA_LIBS='-L%{java_home}/jre/lib/%{java_arch}/server \
-    -L%{java_home}/jre/lib/%{java_arch}\ -L%{java_home}/lib/%{java_arch} \
+    JAVA_HOME=%{_jvmdir}/jre \
+    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \
+    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \
+    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch} \
     -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \
-    JAVA_LD_LIBRARY_PATH=%{java_home}/jre/lib/%{java_arch}/server:%{java_home}/jre/lib/%{java_arch}:%{java_home}/lib/%{java_arch}:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \
+    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \
     > /dev/null 2>&1 || exit 0
-
 
 # Update package indices
 %__cat %{_libdir}/R/library/*/CONTENTS > %{_docdir}/R-%{version}/html/search/index.txt 2>/dev/null
@@ -338,6 +333,11 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Wed Mar  4 2009 Tom "spot" Callaway <tcallawa@redhat.com> 2.8.1-2
+- fix R-make-search-index.sh (bz 487022)
+- fix libRmath requires to need V-R (thanks to Martyn Plummer)
+- update post scriptlet (bz 477076)
+
 * Mon Dec 22 2008 Tom "spot" Callaway <tcallawa@redhat.com> 2.8.1-1
 - update javareconf call in %%post (bz 477076)
 - 2.8.1
