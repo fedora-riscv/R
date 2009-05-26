@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.9.0
-Release: 1%{?dist}.1
+Release: 1%{?dist}.2
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -49,7 +49,7 @@ and called at run time.
 %package core
 Summary: The minimal R components necessary for a functional runtime
 Group: Applications/Engineering
-Requires: ggv, cups, firefo
+Requires: ggv, cups, firefox
 Requires: perl, sed, gawk, tetex-latex, less, vim-minimal
 
 # These are the submodules that R-core provides. Sometimes R modules say they
@@ -923,6 +923,9 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Tue May 26 2009 Tom "spot" Callaway <tcallawa@redhat.com> - 2.9.0-1.2
+- fix embarrassing typo causing broken dependencies (bz 502306)
+
 * Wed Apr 29 2009 Tom "spot" Callaway <tcallawa@redhat.com> - 2.9.0-1.1
 - fix Requires on vi to be vim-minimal
 
