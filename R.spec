@@ -5,7 +5,7 @@
 %endif
 
 Name: R
-Version: 2.9.1
+Version: 2.9.2
 Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
@@ -57,26 +57,26 @@ Requires: perl, sed, gawk, texlive-latex, texlive-dvips, less, vi
 # depend on one of these submodules rather than just R. These are provided for 
 # packager convenience.
 Provides: R-base = %{version}
-Provides: R-boot = 1.2.37
-Provides: R-class = 7.2.47
+Provides: R-boot = 1.2.38
+Provides: R-class = 7.2.48
 Provides: R-cluster = 1.12.0
 Provides: R-codetools = 0.2.2
 Provides: R-datasets = %{version}
-Provides: R-foreign = 0.8.36
+Provides: R-foreign = 0.8.37
 Provides: R-graphics = %{version}
 Provides: R-grDevices = %{version}
 Provides: R-grid = %{version}
 Provides: R-KernSmooth = 2.23.2
 Provides: R-lattice = 0.17.25
-Provides: R-MASS = 7.2.47
-Provides: R-Matrix = 0.999375.29
+Provides: R-MASS = 7.2.48
+Provides: R-Matrix = 0.999375.30
 Obsoletes: R-Matrix < 0.999375-7
 Provides: R-methods = %{version}
 Provides: R-mgcv = 1.5.5
-Provides: R-nlme = 3.1.92
-Provides: R-nnet = 7.2.47
-Provides: R-rpart = 3.1.44
-Provides: R-spatial = 7.2.47
+Provides: R-nlme = 3.1.93
+Provides: R-nnet = 7.2.48
+Provides: R-rpart = 3.1.45
+Provides: R-spatial = 7.2.48
 Provides: R-splines = %{version}
 Provides: R-stats = %{version}
 Provides: R-stats4 = %{version}
@@ -84,7 +84,7 @@ Provides: R-survival = 2.35.4
 Provides: R-tcltk = %{version}
 Provides: R-tools = %{version}
 Provides: R-utils = %{version}
-Provides: R-VR = 7.2.47
+Provides: R-VR = 7.2.48
 
 %description core
 A language and environment for statistical computing and graphics.
@@ -234,13 +234,15 @@ make pdf
 make info
 
 # Convert to UTF-8
-for i in doc/manual/R-intro.info doc/manual/R-FAQ.info-1 doc/FAQ doc/manual/R-exts.info-1; do
+for i in doc/manual/R-intro.info doc/manual/R-FAQ.info doc/FAQ doc/manual/R-admin.info doc/manual/R-exts.info-1; do
   iconv -f iso-8859-1 -t utf-8 -o $i{.utf8,}
   mv $i{.utf8,}
 done
 
 %install
-make DESTDIR=${RPM_BUILD_ROOT} install install-info install-pdf
+make DESTDIR=${RPM_BUILD_ROOT} install install-info
+make DESTDIR=${RPM_BUILD_ROOT} install-pdf
+
 rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir
 rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir.old
 install -p CAPABILITIES ${RPM_BUILD_ROOT}%{_docdir}/R-%{version}
@@ -271,7 +273,7 @@ touch -r NEWS $RPM_BUILD_ROOT%{_bindir}/R
 sed -i 's|\..\/\..|%{_libdir}/R|g' $RPM_BUILD_ROOT%{_docdir}/R-%{version}/html/packages.html
 
 for i in $RPM_BUILD_ROOT%{_libdir}/R/library/*/html/*.html; do
-	sed -i 's|\..\/\..\/..\/doc|%{_docdir}/R-%{version}|g' $i
+  sed -i 's|\..\/\..\/..\/doc|%{_docdir}/R-%{version}|g' $i
 done
 
 # Fix exec bits
@@ -994,6 +996,15 @@ R CMD javareconf \
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Mon Aug 24 2009 Tom "spot" Callaway <tcallawa@redhat.com> - 2.9.2-1
+- Update to 2.9.2
+
+* Fri Jul 24 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.9.1-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
+* Fri Jul 10 2009 Tom "spot" Callaway <tcallawa@redhat.com> - 2.9.1-2
+- don't try to make the PDFs in rawhide/i586
+
 * Thu Jul  9 2009 Tom "spot" Callaway <tcallawa@redhat.com> - 2.9.1-1
 - update to 2.9.1
 - fix versioned provides
@@ -1303,8 +1314,8 @@ R CMD javareconf \
   avoiding warnings about UTF-8 locale not being supported
 
 * Mon Mar 15 2004 Martyn Plummer <plummer@iarc.fr>
-- No need to export optimization flags. This is done by %configure
-- Folded info installation into %makeinstall 
+- No need to export optimization flags. This is done by %%configure
+- Folded info installation into %%makeinstall 
 - Check that RPM_BASE_ROOT is not set to "/" before cleaning up
 
 * Thu Feb 03 2004 Martyn Plummer <plummer@iarc.fr>
@@ -1313,7 +1324,7 @@ R CMD javareconf \
 * Tue Feb 03 2004 Martyn Plummer <plummer@iarc.fr>
 - Changes from James Henstridge <james@daa.com.au> to allow building on IA64:
 - Added BuildRequires for tcl-devel tk-devel tetex-latex
-- Use the %configure macro to call the configure script
+- Use the %%configure macro to call the configure script
 - Pass --with-tcl-config and --with-tk-config arguments to configure
 - Set rhome to point to the build root during "make install"
 
