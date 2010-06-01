@@ -5,7 +5,7 @@
 %endif
 
 Name: R
-Version: 2.11.0
+Version: 2.11.1
 Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
@@ -65,12 +65,12 @@ Provides: R-graphics = %{version}
 Provides: R-grDevices = %{version}
 Provides: R-grid = %{version}
 Provides: R-KernSmooth = 2.23.3
-Provides: R-lattice = 0.18.5
-Provides: R-MASS = 7.3.5
-Provides: R-Matrix = 0.999375.38
+Provides: R-lattice = 0.18.8
+Provides: R-MASS = 7.3.6
+Provides: R-Matrix = 0.999375.39
 Obsoletes: R-Matrix < 0.999375-7
 Provides: R-methods = %{version}
-Provides: R-mgcv = 1.6.1
+Provides: R-mgcv = 1.6.2
 Provides: R-nlme = 3.1.96
 Provides: R-nnet = 7.3.1
 Provides: R-rpart = 3.1.46
@@ -107,7 +107,7 @@ Requires: libpng-devel, libjpeg-devel, readline-devel
 Requires: XFree86-devel
 Requires: bzip2-devel, pcre-devel, zlib-devel
 Requires: tcl-devel, tk-devel, pkgconfig
-Provides: R-Matrix-devel = 0.999375.38
+Provides: R-Matrix-devel = 0.999375.39
 Obsoletes: R-Matrix-devel < 0.999375-7
 
 %description devel
@@ -845,6 +845,9 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Tue Jun  1 2010 Tom "spot" Callaway <tcallawa@redhat.com> - 2.11.1-1
+- update to 2.11.1
+
 * Thu Apr 22 2010 Tom "spot" Callaway <tcallawa@redhat.com> - 2.11.0-1
 - update to 2.11.0
 
