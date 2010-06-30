@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.11.1
-Release: 1%{?dist}
+Release: 3%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -119,7 +119,7 @@ Group: Development/Libraries
 
 %description -n libRmath
 A standalone library of mathematical and statistical functions derived
-from the R project.  This packages provides the shared libRmath library.
+from the R project.  This package provides the shared libRmath library.
 
 %package -n libRmath-devel
 Summary: Standalone math library from the R project
@@ -128,8 +128,16 @@ Requires: libRmath = %{version}-%{release}, pkgconfig
 
 %description -n libRmath-devel
 A standalone library of mathematical and statistical functions derived
-from the R project.  This packages provides the static libRmath library
-and header files.
+from the R project.  This package provides the libRmath header files.
+
+%package -n libRmath-static
+Summary: Static R Standalone math library
+Group: Development/Libraries
+Requires: libRmath-devel = %{version}-%{release}
+
+%description -n libRmath-static
+A standalone library of mathematical and statistical functions derived
+from the R project.  This package provides the static libRmath library.
 
 %prep
 %setup -q
@@ -153,8 +161,8 @@ EOF
 chmod +x %{__perl_requires}
 
 %build
-# Add PATHS to Renviron for R_LIBS
-echo 'R_LIBS=${R_LIBS-'"'%{_libdir}/R/library:%{_datadir}/R/library'"'}' >> etc/Renviron.in
+# Add PATHS to Renviron for R_LIBS_SITE
+echo 'R_LIBS_SITE=${R_LIBS_SITE-'"'/usr/local/lib/R/site-library:/usr/local/lib/R/library:%{_libdir}/R/library:%{_datadir}/R/library'"'}' >> etc/Renviron.in
 
 export R_PDFVIEWER="%{_bindir}/ggv"
 export R_PRINTCMD="lpr"
@@ -788,9 +796,12 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 
 %files -n libRmath-devel
 %defattr(-, root, root, -)
-%{_libdir}/libRmath.a
 %{_includedir}/Rmath.h
 %{_libdir}/pkgconfig/libRmath.pc
+
+%files -n libRmath-static
+%defattr(-, root, root, -)
+%{_libdir}/libRmath.a
 
 %clean
 rm -rf ${RPM_BUILD_ROOT};
