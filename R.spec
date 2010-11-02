@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.12.0
-Release: 1%{?dist}
+Release: 1%{?dist}.1
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -15,8 +15,8 @@ Source2: R-make-search-index.sh
 License: GPLv2+
 Group: Applications/Engineering
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: gcc-g77
-BuildRequires: gcc-c++, tetex-latex, texinfo 
+BuildRequires: gcc4-gfortran, gcc4
+BuildRequires: gcc4-c++, tetex-latex, texinfo 
 BuildRequires: libpng-devel, libjpeg-devel, readline-devel
 BuildRequires: tcl-devel, tk-devel
 BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
@@ -102,7 +102,7 @@ Summary: Files for development of R packages
 Group: Applications/Engineering
 Requires: R-core = %{version}-%{release}
 # You need all the BuildRequires for the development version
-Requires: gcc-c++, gcc-g77, tetex-latex
+Requires: gcc4-c++, gcc4-gfortran, gcc4, tetex-latex
 Requires: libpng-devel, libjpeg-devel, readline-devel
 Requires: XFree86-devel
 Requires: bzip2-devel, pcre-devel, zlib-devel
@@ -177,28 +177,28 @@ export CXXPICFLAGS="-fPIC"
 
 case "%{_target_cpu}" in
       x86_64|mips64|ppc64|powerpc64|sparc64|s390x)
-          export CC="gcc -m64"
-          export CXX="g++ -m64"
-          export F77="g77 -m64"
-          export FC="g77 -m64"
+          export CC="gcc4 -m64"
+          export CXX="g++4 -m64"
+          export F77="gfortran -m64"
+          export FC="gfortran -m64"
       ;;
       ia64|alpha|arm*|sh*)
-          export CC="gcc"
-          export CXX="g++"
-          export F77="g77"
+          export CC="gcc4"
+          export CXX="g++4"
+          export F77="gfortran"
           export FC="g77"
       ;;
       s390)
-          export CC="gcc -m31"
-          export CXX="g++ -m31"
-          export F77="g77 -m31"
-          export FC="g77 -m31"
+          export CC="gcc4 -m31"
+          export CXX="g++4 -m31"
+          export F77="gfortran -m31"
+          export FC="gfortran -m31"
       ;;    
       *)
-          export CC="gcc -m32"
-          export CXX="g++ -m32"
-          export F77="g77 -m32"
-          export FC="g77 -m32"
+          export CC="gcc4 -m32"
+          export CXX="g++4 -m32"
+          export F77="gfortran -m32"
+          export FC="gfortran -m32"
       ;;    
 esac
 
@@ -857,6 +857,9 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Tue Nov  2 2010 Tom "spot" Callaway <tcallawa@redhat.com> - 2.12.0-1.1
+- use gcc4
+
 * Wed Oct 20 2010 Tom "spot" Callaway <tcallawa@redhat.com> - 2.12.0-1
 - update to 2.12.0
 
