@@ -5,8 +5,8 @@
 %endif
 
 Name: R
-Version: 2.12.0
-Release: 1%{?dist}.1
+Version: 2.12.1
+Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -56,9 +56,9 @@ Requires: perl, sed, gawk, tetex-latex, less, vim-minimal
 # packager convenience.
 Provides: R-base = %{version}
 Provides: R-boot = 1.2.43
-Provides: R-class = 7.3.2
-Provides: R-cluster = 1.13.1
-Provides: R-codetools = 0.2.2
+Provides: R-class = 7.3.3
+Provides: R-cluster = 1.13.2
+Provides: R-codetools = 0.2.6
 Provides: R-datasets = %{version}
 Provides: R-foreign = 0.8.41
 Provides: R-graphics = %{version}
@@ -66,19 +66,19 @@ Provides: R-grDevices = %{version}
 Provides: R-grid = %{version}
 Provides: R-KernSmooth = 2.23.4
 Provides: R-lattice = 0.19.13
-Provides: R-MASS = 7.3.8
-Provides: R-Matrix = 0.999375.44
+Provides: R-MASS = 7.3.9
+Provides: R-Matrix = 0.999375.46
 Obsoletes: R-Matrix < 0.999375-7
 Provides: R-methods = %{version}
-Provides: R-mgcv = 1.6.2
+Provides: R-mgcv = 1.7.2
 Provides: R-nlme = 3.1.97
 Provides: R-nnet = 7.3.1
-Provides: R-rpart = 3.1.46
+Provides: R-rpart = 3.1.48
 Provides: R-spatial = 7.3.2
 Provides: R-splines = %{version}
 Provides: R-stats = %{version}
 Provides: R-stats4 = %{version}
-Provides: R-survival = 2.35.8
+Provides: R-survival = 2.36.2
 Provides: R-tcltk = %{version}
 Provides: R-tools = %{version}
 Provides: R-utils = %{version}
@@ -107,7 +107,7 @@ Requires: libpng-devel, libjpeg-devel, readline-devel
 Requires: XFree86-devel
 Requires: bzip2-devel, pcre-devel, zlib-devel
 Requires: tcl-devel, tk-devel, pkgconfig
-Provides: R-Matrix-devel = 0.999375.44
+Provides: R-Matrix-devel = 0.999375.46
 Obsoletes: R-Matrix-devel < 0.999375-7
 
 %description devel
@@ -557,6 +557,7 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %dir %{_libdir}/R/library/mgcv/
 %{_libdir}/R/library/mgcv/CITATION
 %{_libdir}/R/library/mgcv/DESCRIPTION
+%{_libdir}/R/library/mgcv/data/
 %{_libdir}/R/library/mgcv/help/
 %{_libdir}/R/library/mgcv/html/
 %{_libdir}/R/library/mgcv/INDEX
@@ -703,13 +704,13 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %{_libdir}/R/library/survival/COPYING
 %{_libdir}/R/library/survival/data/
 %{_libdir}/R/library/survival/DESCRIPTION
+%{_libdir}/R/library/survival/doc/
 %{_libdir}/R/library/survival/help/
 %{_libdir}/R/library/survival/html/
 %{_libdir}/R/library/survival/INDEX
 %{_libdir}/R/library/survival/libs/
 %{_libdir}/R/library/survival/Meta/
 %{_libdir}/R/library/survival/NAMESPACE
-%{_libdir}/R/library/survival/noweb/
 %{_libdir}/R/library/survival/R/
 # tcltk
 %dir %{_libdir}/R/library/tcltk/
@@ -857,6 +858,9 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Mon Dec 20 2010 Tom Callaway <spot@fedoraproject.org> - 2.12.1-1
+- update to 2.12.1
+
 * Tue Nov  2 2010 Tom "spot" Callaway <tcallawa@redhat.com> - 2.12.0-1.1
 - use gcc4
 
