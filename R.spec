@@ -5,7 +5,7 @@
 %endif
 
 Name: R
-Version: 2.12.2
+Version: 2.13.0
 Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
@@ -60,21 +60,21 @@ Provides: R-class = 7.3.3
 Provides: R-cluster = 1.13.3
 Provides: R-codetools = 0.2.8
 Provides: R-datasets = %{version}
-Provides: R-foreign = 0.8.42
+Provides: R-foreign = 0.8.43
 Provides: R-graphics = %{version}
 Provides: R-grDevices = %{version}
 Provides: R-grid = %{version}
 Provides: R-KernSmooth = 2.23.4
-Provides: R-lattice = 0.19.17
-Provides: R-MASS = 7.3.11
-Provides: R-Matrix = 0.999375.46
+Provides: R-lattice = 0.19.23
+Provides: R-MASS = 7.3.12
+Provides: R-Matrix = 0.999375.50
 Obsoletes: R-Matrix < 0.999375-7
 Provides: R-methods = %{version}
-Provides: R-mgcv = 1.7.3
-Provides: R-nlme = 3.1.98
+Provides: R-mgcv = 1.7.5
+Provides: R-nlme = 3.1.100
 Provides: R-nnet = 7.3.1
-Provides: R-rpart = 3.1.48
-Provides: R-spatial = 7.3.2
+Provides: R-rpart = 3.1.49
+Provides: R-spatial = 7.3.3
 Provides: R-splines = %{version}
 Provides: R-stats = %{version}
 Provides: R-stats4 = %{version}
@@ -107,7 +107,7 @@ Requires: libpng-devel, libjpeg-devel, readline-devel
 Requires: XFree86-devel
 Requires: bzip2-devel, pcre-devel, zlib-devel
 Requires: tcl-devel, tk-devel, pkgconfig
-Provides: R-Matrix-devel = 0.999375.46
+Provides: R-Matrix-devel = 0.999375.50
 Obsoletes: R-Matrix-devel < 0.999375-7
 
 %description devel
@@ -266,6 +266,11 @@ done
 chmod +x $RPM_BUILD_ROOT%{_datadir}/R/sh/echo.sh
 chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_docdir}/R-%{version}/CAPABILITIES
 
+# Symbolic link for convenience
+pushd %{buildroot}%{_libdir}/R
+ln -s ../../include/R include
+popd
+
 %files
 # Metapackage
 
@@ -289,6 +294,7 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %lang(nn) %{_datadir}/R/locale/nn/
 %lang(pt) %{_datadir}/R/locale/pt*/
 %lang(ru) %{_datadir}/R/locale/ru/
+%lang(tr) %{_datadir}/R/locale/tr/
 %lang(zh) %{_datadir}/R/locale/zh*/
 %{_datadir}/R/make/
 %{_datadir}/R/R/
@@ -300,7 +306,6 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %{_libdir}/R/lib
 # Have to break this out for the translations
 %dir %{_libdir}/R/library
-%{_libdir}/R/library/R.css
 # base
 %dir %{_libdir}/R/library/base/
 %{_libdir}/R/library/base/CITATION
@@ -319,6 +324,7 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %lang(ko) %{_libdir}/R/library/base/po/ko/
 %lang(pt) %{_libdir}/R/library/base/po/pt*/
 %lang(ru) %{_libdir}/R/library/base/po/ru/
+%lang(tr) %{_libdir}/R/library/base/po/tr/
 %lang(zh) %{_libdir}/R/library/base/po/zh*/
 %{_libdir}/R/library/base/R/
 # boot
@@ -375,6 +381,23 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %{_libdir}/R/library/codetools/Meta/
 %{_libdir}/R/library/codetools/NAMESPACE
 %{_libdir}/R/library/codetools/R/
+# compiler
+%dir %{_libdir}/R/library/compiler/
+%{_libdir}/R/library/compiler/DESCRIPTION
+%{_libdir}/R/library/compiler/help/
+%{_libdir}/R/library/compiler/html/
+%{_libdir}/R/library/compiler/INDEX
+%{_libdir}/R/library/compiler/Meta/
+%{_libdir}/R/library/compiler/NAMESPACE
+%{_libdir}/R/library/compiler/R/
+%dir %{_libdir}/R/library/compiler/po/
+%lang(de) %{_libdir}/R/library/compiler/po/de/
+%lang(en) %{_libdir}/R/library/compiler/po/en*/
+%lang(fr) %{_libdir}/R/library/compiler/po/fr/
+%lang(ja) %{_libdir}/R/library/compiler/po/ja/
+%lang(pt) %{_libdir}/R/library/compiler/po/pt*/
+%lang(ru) %{_libdir}/R/library/compiler/po/ru/
+%lang(zh) %{_libdir}/R/library/compiler/po/zh*/
 # datasets
 %dir %{_libdir}/R/library/datasets/
 %{_libdir}/R/library/datasets/data/
@@ -428,6 +451,7 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %{_libdir}/R/library/grDevices/enc/
 %{_libdir}/R/library/grDevices/help/
 %{_libdir}/R/library/grDevices/html/
+%{_libdir}/R/library/grDevices/icc/
 %{_libdir}/R/library/grDevices/INDEX
 %{_libdir}/R/library/grDevices/libs/
 %{_libdir}/R/library/grDevices/Meta/
@@ -679,6 +703,7 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %lang(ko) %{_libdir}/R/library/stats/po/ko/
 %lang(pt) %{_libdir}/R/library/stats/po/pt*/
 %lang(ru) %{_libdir}/R/library/stats/po/ru/
+%lang(tr) %{_libdir}/R/library/stats/po/tr/
 %lang(zh) %{_libdir}/R/library/stats/po/zh*/
 %{_libdir}/R/library/stats/R/
 %{_libdir}/R/library/stats/SOURCES.ts
@@ -699,6 +724,7 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %lang(ko) %{_libdir}/R/library/stats4/po/ko/
 %lang(pt) %{_libdir}/R/library/stats4/po/pt*/
 %lang(ru) %{_libdir}/R/library/stats4/po/ru/
+%lang(tr) %{_libdir}/R/library/stats4/po/tr/
 %lang(zh) %{_libdir}/R/library/stats4/po/zh*/
 %{_libdir}/R/library/stats4/R/
 # survival
@@ -755,11 +781,13 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %lang(ko) %{_libdir}/R/library/tools/po/ko/
 %lang(pt) %{_libdir}/R/library/tools/po/pt*/
 %lang(ru) %{_libdir}/R/library/tools/po/ru/
+%lang(tr) %{_libdir}/R/library/tools/po/tr/
 %lang(zh) %{_libdir}/R/library/tools/po/zh*/
 %{_libdir}/R/library/tools/R/
 # utils
 %dir %{_libdir}/R/library/utils/
 %{_libdir}/R/library/utils/DESCRIPTION
+%{_libdir}/R/library/utils/doc/
 %{_libdir}/R/library/utils/help/
 %{_libdir}/R/library/utils/html/
 %{_libdir}/R/library/utils/iconvlist
@@ -775,6 +803,7 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %lang(ko) %{_libdir}/R/library/utils/po/ko/
 %lang(pt) %{_libdir}/R/library/utils/po/pt*/
 %lang(ru) %{_libdir}/R/library/utils/po/ru/
+%lang(tr) %{_libdir}/R/library/utils/po/tr/
 %lang(zh) %{_libdir}/R/library/utils/po/zh*/
 %{_libdir}/R/library/utils/R/
 %{_libdir}/R/library/utils/Sweave/
@@ -794,6 +823,8 @@ chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{_d
 %defattr(-, root, root, -)
 %{_libdir}/pkgconfig/libR.pc
 %{_includedir}/R
+# Symlink to %{_includedir}/R/
+%{_libdir}/R/include
 
 %files -n libRmath
 %defattr(-, root, root, -)
@@ -862,6 +893,10 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Thu Apr 12 2011 Tom Callaway <spot@fedoraproject.org> - 2.13.0-1
+- update to 2.13.0
+- add convenience symlink for include directory (bz 688295)
+
 * Sun Feb 27 2011 Tom Callaway <spot@fedoraproject.org> - 2.12.2-1
 - update to 2.12.2
 
