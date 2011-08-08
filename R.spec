@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.13.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -23,6 +23,7 @@ BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
 BuildRequires: java-1.4.2-gcj-compat
 BuildRequires: XFree86-devel
 BuildRequires: bzip2-devel, libtiff-devel
+BuildRequires: less
 # R-devel will pull in R-core
 Requires: R-devel = %{version}-%{release}
 # libRmath-devel will pull in libRmath
@@ -892,6 +893,9 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Mon Aug  8 2011 Tom Callaway <spot@fedoraproject.org> - 2.13.1-2
+- add BuildRequires: less
+
 * Mon Jul 11 2011 Tom Callaway <spot@fedoraproject.org> - 2.13.1-1
 - update to 2.13.1
 
