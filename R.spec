@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.14.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -106,7 +106,7 @@ Requires: R-core = %{version}-%{release}
 # You need all the BuildRequires for the development version
 Requires: gcc4-c++, gcc4-gfortran, gcc4, tetex-latex
 Requires: libpng-devel, libjpeg-devel, readline-devel
-Requires: XFree86-devel
+Requires: XFree86-devel, texinfo
 Requires: bzip2-devel, pcre-devel, zlib-devel
 Requires: tcl-devel, tk-devel, pkgconfig
 Provides: R-Matrix-devel = 1.0.1
@@ -925,6 +925,9 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Mon Nov  7 2011 Tom Callaway <spot@fedoraproject.org> - 2.14.0-2
+- add texinfo to Requires for -devel package
+
 * Wed Nov  2 2011 Tom Callaway <spot@fedoraproject.org> - 2.14.0-1
 - update to 2.14.0
 
