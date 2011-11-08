@@ -6,7 +6,7 @@
 
 Name: R
 Version: 2.14.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
@@ -169,6 +169,11 @@ echo 'R_LIBS_SITE=${R_LIBS_SITE-'"'/usr/local/lib/R/site-library:/usr/local/lib/
 export R_PDFVIEWER="%{_bindir}/ggv"
 export R_PRINTCMD="lpr"
 export R_BROWSER="%{_bindir}/firefox"
+# No inconsolata on RHEL tex
+%if 0%{?rhel}
+export R_RD4PDF="times,hyper"
+sed -i 's|inconsolata,||g' etc/Renviron.in
+%endif
 # Only broken on EL-4, ppc
 %ifarch ppc
 export CPICFLAGS="-fPIC"
@@ -925,6 +930,9 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Tue Nov  8 2011 Tom Callaway <spot@fedoraproject.org> - 2.14.0-3
+- No inconsolata for EL
+
 * Mon Nov  7 2011 Tom Callaway <spot@fedoraproject.org> - 2.14.0-2
 - add texinfo to Requires for -devel package
 
