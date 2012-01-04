@@ -930,7 +930,7 @@ fi
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
-* Wed Jan  4 2011 Tom Callaway <spot@fedoraproject.org> - 2.14.1-1
+* Wed Jan  4 2012 Tom Callaway <spot@fedoraproject.org> - 2.14.1-1
 - update to 2.14.1
 
 * Tue Nov  8 2011 Tom Callaway <spot@fedoraproject.org> - 2.14.0-3
