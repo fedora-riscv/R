@@ -6,13 +6,14 @@
 
 Name: R
 Version: 2.15.2
-Release: 5%{?dist}
+Release: 7%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-2/R-%{version}.tar.gz
 Source1: macros.R
 Source2: R-make-search-index.sh
 Patch0: R-cairo-fix.patch
+Patch1: R-2.15.2-makeinfov5.patch
 License: GPLv2+
 Group: Applications/Engineering
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -24,8 +25,11 @@ BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
 BuildRequires: java-1.5.0-gcj, lapack-devel
 BuildRequires: libSM-devel, libX11-devel, libICE-devel, libXt-devel
 BuildRequires: bzip2-devel, libXmu-devel, cairo-devel, libtiff-devel
-BuildRequires: gcc-objc, pango-devel, libicu-devel
+BuildRequires: gcc-objc, pango-devel, libicu-devel, xz-devel
 BuildRequires: less
+%if 0%{?fedora} >= 18
+BuildRequires: tex(inconsolata.sty)
+%endif
 # R-devel will pull in R-core
 Requires: R-devel = %{version}-%{release}
 # libRmath-devel will pull in libRmath
@@ -103,15 +107,14 @@ add additional functionality by defining new functions. For
 computationally intensive tasks, C, C++ and Fortran code can be linked
 and called at run time.
 
-%package devel
-Summary: Files for development of R packages
+%package core-devel
+Summary: Core files for development of R packages (no Java)
 Group: Applications/Engineering
 Requires: R-core = %{version}-%{release}
 # You need all the BuildRequires for the development version
 Requires: gcc-c++, gcc-gfortran, tex(latex), texinfo-tex
 Requires: bzip2-devel, libX11-devel, pcre-devel, zlib-devel
 Requires: tcl-devel, tk-devel, pkgconfig
-Requires: R-java-devel = %{version}-%{release}
 # TeX files needed
 %if 0%{?fedora} >= 18
 Requires: tex(ecrm1000.tfm)
@@ -126,8 +129,19 @@ Requires: tex(cm-super-ts1.enc)
 Provides: R-Matrix-devel = 1.0.9
 Obsoletes: R-Matrix-devel < 0.999375-7
 
+%description core-devel
+Install R-core-devel if you are going to develop or compile R packages.
+This package does not configure the R environment for Java, install
+R-java-devel if you want this.
+
+%package devel
+Summary:	Full R development environment metapackage
+Requires:	R-core-devel = %{version}-%{release}
+Requires:	R-java-devel = %{version}-%{release}
+
 %description devel
-Install R-devel if you are going to develop or compile R packages.
+This is a metapackage to install a complete (with Java) R development
+environment.
 
 %package java
 Summary: R with Fedora provided Java Runtime Environment
@@ -155,7 +169,7 @@ Fedora's openJDK.
 %package java-devel
 Summary: Development package for use with Java enabled R components
 Group: Applications/Engineering
-Requires(post): R-devel = %{version}-%{release}
+Requires(post): R-core-devel = %{version}-%{release}
 Requires(post): java-devel
 
 %description java-devel
@@ -191,6 +205,7 @@ from the R project.  This package provides the static libRmath library.
 %prep
 %setup -q
 %patch0 -p1 -b .cairo-fix
+%patch1 -p1 -b .makeinfo-fix
 
 # Filter false positive provides.
 cat <<EOF > %{name}-prov
@@ -935,18 +950,21 @@ popd
 %docdir %{_docdir}/R-%{version}
 /etc/ld.so.conf.d/*
 
-%files devel
+%files core-devel
 %defattr(-, root, root, -)
 %{_libdir}/pkgconfig/libR.pc
 %{_includedir}/R
 # Symlink to %{_includedir}/R/
 %{_libdir}/R/include
 
+%files devel
+# Nothing, all files provided by R-core-devel
+
 %files java
 # Nothing, all files provided by R-core
 
 %files java-devel
-# Nothing, all files provided by R-devel
+# Nothing, all files provided by R-core-devel
 
 %files -n libRmath
 %defattr(-, root, root, -)
@@ -1042,6 +1060,13 @@ R CMD javareconf \
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Wed Feb 27 2013 Tom Callaway <spot@fedoraproject.org> - 2.15.2-7
+- add BuildRequires: xz-devel (for system xz/lzma support)
+- create R-core-devel
+
+* Sat Jan 26 2013 Kevin Fenzi <kevin@scrye.com> - 2.15.2-6
+- Rebuild for new icu
+
 * Sun Jan 20 2013 Tom Callaway <spot@fedoraproject.org> - 2.15.2-5
 - apply upstream fix for cairo issues (bz 891983)
 
@@ -1112,7 +1137,7 @@ R CMD javareconf \
 * Mon Jul 11 2011 Tom Callaway <spot@fedoraproject.org> - 2.13.1-1
 - update to 2.13.1
 
-* Thu Apr 12 2011 Tom Callaway <spot@fedoraproject.org> - 2.13.0-1
+* Tue Apr 12 2011 Tom Callaway <spot@fedoraproject.org> - 2.13.0-1
 - update to 2.13.0
 - add convenience symlink for include directory (bz 688295)
 
@@ -1335,7 +1360,7 @@ R CMD javareconf \
 * Sun Oct 15 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.4.0-1
 - bump for 2.4.0
 
-* Wed Sep 12 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.3.1-2
+* Tue Sep 12 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.3.1-2
 - bump for FC-6
 
 * Fri Jun  2 2006 Tom "spot" Callaway <tcallawa@redhat.com> 2.3.1-1
@@ -1443,7 +1468,7 @@ R CMD javareconf \
 - Modified BuildRequires so we can support older Red Hat versions without
   defining any macros.
 
-* Mon Jun 23 2004 Martyn Plummer <plummner@iarc.fr> 0:1.9.1-0.fdr.2
+* Wed Jun 23 2004 Martyn Plummer <plummner@iarc.fr> 0:1.9.1-0.fdr.2
 - Added libtermcap-devel as BuildRequires for RH 8.0 and 9. Without
   this we get no readline support.
 
@@ -1454,7 +1479,7 @@ R CMD javareconf \
 * Mon Jun 14 2004 Martyn Plummer <plummer@iarc.fr> 0:1.9.0-0.fdr.4
 - Added XFree86-devel as conditional BuildRequires for rh9, rh80
 
-* Wed Jun 08 2004 Martyn Plummer <plummer@iarc.fr> 0:1.9.0-0.fdr.3
+* Tue Jun 08 2004 Martyn Plummer <plummer@iarc.fr> 0:1.9.0-0.fdr.3
 - Corrected names for fc1/fc2/el3 when using conditional BuildRequires
 - Configure searches for C++ preprocessor and fails if we don't have
   gcc-c++ installed. Added to BuildRequires for FC2.
@@ -1464,7 +1489,7 @@ R CMD javareconf \
   from R 1.9.1; patch supplied by Graeme Ambler)
 - Changed permissions of source files to 644 to please rpmlint
 
-* Tue May 03 2004 Martyn Plummer <plummer@iarc.fr> 0:1.9.0-0.fdr.1
+* Mon May 03 2004 Martyn Plummer <plummer@iarc.fr> 0:1.9.0-0.fdr.1
 - R.spec file now has mode 644. Previously it was unreadable by other
   users and this was causing a crash building under mach.
 - Changed version number to conform to Fedora conventions. 
@@ -1487,7 +1512,7 @@ R CMD javareconf \
 - Folded info installation into %%makeinstall 
 - Check that RPM_BASE_ROOT is not set to "/" before cleaning up
 
-* Thu Feb 03 2004 Martyn Plummer <plummer@iarc.fr>
+* Tue Feb 03 2004 Martyn Plummer <plummer@iarc.fr>
 - Removed tcl-devel from BuildRequires
 
 * Tue Feb 03 2004 Martyn Plummer <plummer@iarc.fr>
