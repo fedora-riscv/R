@@ -17,7 +17,7 @@
 
 Name: R
 Version: 3.0.2
-Release: 1%{?dist}
+Release: 3%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-3/R-%{version}.tar.gz
@@ -32,7 +32,7 @@ BuildRequires: gcc-gfortran
 BuildRequires: gcc-c++, tex(latex), texinfo-tex 
 BuildRequires: libpng-devel, libjpeg-devel, readline-devel
 BuildRequires: tcl-devel, tk-devel, ncurses-devel
-BuildRequires: blas >= 3.0, pcre-devel, zlib-devel
+BuildRequires: blas-devel >= 3.0, pcre-devel, zlib-devel
 %if %{modern}
 BuildRequires: java-1.5.0-gcj
 %else
@@ -171,6 +171,8 @@ Summary:	Full R development environment metapackage
 Requires:	R-core-devel = %{version}-%{release}
 %if %{modern}
 Requires:	R-java-devel = %{version}-%{release}
+%else
+Group:		Development/Libraries
 %endif
 
 %description devel
@@ -303,10 +305,16 @@ export FCFLAGS="%{optflags}"
 ( %configure \
     --with-system-zlib --with-system-bzlib --with-system-pcre \
     --with-lapack \
+    --with-blas \
     --with-tcl-config=%{_libdir}/tclConfig.sh \
     --with-tk-config=%{_libdir}/tkConfig.sh \
     --enable-R-shlib \
     --enable-prebuilt-html \
+%if %{modern}
+%ifnarch %{arm}
+    --enable-lto \
+%endif
+%endif
     rdocdir=%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}} \
     rincludedir=%{_includedir}/R \
     rsharedir=%{_datadir}/R) \
@@ -811,6 +819,15 @@ R CMD javareconf \
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Fri Jan 24 2014 Tom Callaway <spot@fedoraproject.org> - 3.0.2-4
+- disable lto on non-modern targets (not just ppc)
+
+* Fri Jan 24 2014 Tom Callaway <spot@fedoraproject.org> - 3.0.2-3
+- disable lto on ppc/ppc64
+
+* Fri Dec 20 2013 Tom Callaway <spot@fedoraproject.org> - 3.0.2-2
+- add --with-blas, --enable-lto to configure
+
 * Tue Oct 15 2013 Tom Callaway <spot@fedoraproject.org> - 3.0.2-1
 - update to 3.0.2
 
