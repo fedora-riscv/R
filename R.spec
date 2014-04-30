@@ -7,14 +7,21 @@
 # Assume not modern. Override if needed.
 %global modern 0
 
+%global with_lto 0
+
 %global system_tre 0
 # We need to use system tre on F21+/RHEL7
 %if 0%{?fedora} >= 21
 %global system_tre 1
 %endif
 
+%if 0%{?fedora} >= 19
+%global with_lto 1
+%endif
+
 %if 0%{?rhel} >= 7
 %global system_tre 1
+%global with_lto 1
 %endif
 
 %if 0%{?fedora}
@@ -329,11 +336,15 @@ case "%{_target_cpu}" in
       ;;    
 esac
 
+%if 0%{?fedora} >= 21
 # With gcc 4.9, if we don't pass -ffat-lto-objects along with -flto, Matrix builds without the needed object code
 # ... and doesn't work at all as a result.
 export CFLAGS="%{optflags} -ffat-lto-objects"
 export CXXFLAGS="%{optflags} -ffat-lto-objects"
 export FCFLAGS="%{optflags} -ffat-lto-objects"
+%else
+export FCFLAGS="%{optflags}"
+%endif
 ( %configure \
 %if %{system_tre}
     --with-system-tre \
@@ -345,7 +356,7 @@ export FCFLAGS="%{optflags} -ffat-lto-objects"
     --with-tk-config=%{_libdir}/tkConfig.sh \
     --enable-R-shlib \
     --enable-prebuilt-html \
-%if %{modern}
+%if %{with_lto}
 %ifnarch %{arm}
     --enable-lto \
 %endif
@@ -385,6 +396,7 @@ make DESTDIR=${RPM_BUILD_ROOT} install-pdf
 
 rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir
 rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir.old
+mkdir -p ${RPM_BUILD_ROOT}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
 install -p CAPABILITIES ${RPM_BUILD_ROOT}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
 
 #Install libRmath files
