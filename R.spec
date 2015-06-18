@@ -36,11 +36,22 @@
 %global modern 1
 %endif
 
+# default to 0.
+%global texi2any 0
+
+%if 0%{?fedora} >= 20
+%global texi2any 1
+%endif
+
+%if 0%{?rhel} >= 7
+%global texi2any 1
+%endif
+
 %global macrosdir %(d=%{_rpmconfigdir}/macros.d; [ -d $d ] || d=%{_sysconfdir}/rpm; echo $d)
 
 Name: R
-Version: 3.2.0
-Release: 2%{?dist}
+Version: 3.2.1
+Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-3/R-%{version}.tar.gz
@@ -145,7 +156,7 @@ Provides: R-grid = %{version}
 Provides: R-KernSmooth = 2.23.14
 Provides: R-lattice = 0.20.31
 Provides: R-MASS = 7.3.40
-Provides: R-Matrix = 1.2.0
+Provides: R-Matrix = 1.2.1
 Obsoletes: R-Matrix < 0.999375-7
 Provides: R-methods = %{version}
 Provides: R-mgcv = 1.8.6
@@ -209,7 +220,7 @@ Requires: tex(cm-super-ts1.enc)
 Requires: qpdf
 %endif
 
-Provides: R-Matrix-devel = 1.2.0
+Provides: R-Matrix-devel = 1.2.1
 Obsoletes: R-Matrix-devel < 0.999375-7
 
 %if %{modern}
@@ -400,6 +411,11 @@ export FCFLAGS="%{optflags}"
     --enable-lto \
 %endif
 %endif
+%if %{texi2any}
+    MAKEINFO=texi2any \
+%else
+    MAKEINFO=makeinfo \
+%endif
     rdocdir=%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}} \
     rincludedir=%{_includedir}/R \
     rsharedir=%{_datadir}/R) \
@@ -417,7 +433,11 @@ cp doc/manual/R-intro.texi doc/manual/R-intro.texi.spot
 sed -i 's|@eqn|@math|g' doc/manual/R-exts.texi
 sed -i 's|@eqn|@math|g' doc/manual/R-intro.texi
 %endif
-make info
+%if %{texi2any}
+    make MAKEINFO=texi2any info
+%else
+    make MAKEINFO=makeinfo info
+%endif
 
 # Convert to UTF-8
 for i in doc/manual/R-intro.info doc/manual/R-FAQ.info doc/FAQ doc/manual/R-admin.info doc/manual/R-exts.info-1; do
@@ -923,8 +943,17 @@ R CMD javareconf \
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Thu Jun 18 2015 Tom Callaway <spot@fedoraproject.org> - 3.2.1-1
+- update to 3.2.1
+
+* Tue Jun 16 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.2.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
 * Mon May 04 2015 Jakub Čajka <jcajka@redhat.com> - 3.2.0-2
 - valgrind is available only on selected arches, fixes build on s390
+
+* Thu Apr 30 2015 Tom Callaway <spot@fedoraproject.org>
+- conditionalize MAKEINFO for ancient things (rhel 6 or older)
 
 * Sun Apr 26 2015 Tom Callaway <spot@fedoraproject.org> - 3.2.0-1
 - update to 3.2.0
