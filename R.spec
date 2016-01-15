@@ -7,6 +7,9 @@
 # Assume not modern. Override if needed.
 %global modern 0
 
+# Track if we're hardening (all current fedora and RHEL 7+)
+%global hardening 0
+
 %global with_lto 0
 %global with_java_headless 0
 
@@ -18,7 +21,7 @@
 %endif
 
 # Using lto breaks debuginfo.
-# %%if 0%{?fedora} >= 19
+# %%if 0%%{?fedora} >= 19
 # %%global with_lto 1
 # %%endif
 
@@ -26,10 +29,12 @@
 %global system_tre 1
 # %%global with_lto 1
 %global with_java_headless 1
+%global hardening 1
 %endif
 
 %if 0%{?fedora}
 %global modern 1
+%global hardening 1
 %endif
 
 %if 0%{?rhel} >= 6
@@ -51,7 +56,7 @@
 
 Name: R
 Version: 3.2.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: ftp://cran.r-project.org/pub/R/src/base/R-3/R-%{version}.tar.gz
@@ -147,6 +152,10 @@ and called at run time.
 Summary: The minimal R components necessary for a functional runtime
 Group: Applications/Engineering
 Requires: xdg-utils, cups
+# R inherits the compiler flags it was built with, hence we need this on hardened systems
+%if 0%{hardening}
+Requires: redhat-rpm-config
+%endif
 %if %{modern}
 Requires: tex(dvips), vi
 %else
@@ -837,7 +846,7 @@ make check
 %{_libdir}/R/library/utils/
 %{_libdir}/R/modules
 %{_libdir}/R/COPYING
-# %{_libdir}/R/NEWS*
+# %%{_libdir}/R/NEWS*
 %{_libdir}/R/SVN-REVISION
 /usr/lib/rpm/R-make-search-index.sh
 %{_infodir}/R-*.info*
@@ -851,7 +860,7 @@ make check
 %defattr(-, root, root, -)
 %{_libdir}/pkgconfig/libR.pc
 %{_includedir}/R
-# Symlink to %{_includedir}/R/
+# Symlink to %%{_includedir}/R/
 %{_libdir}/R/include
 
 %files devel
@@ -961,13 +970,16 @@ R CMD javareconf \
 %postun -n libRmath -p /sbin/ldconfig
 
 %changelog
+* Fri Jan 15 2016 Tom Callaway <spot@fedoraproject.org> - 3.2.3-2
+- Requires: redhat-rpm-config on hardened systems (all Fedora and RHEL 7+)
+
 * Fri Dec 11 2015 Tom Callaway <spot@fedoraproject.org> - 3.2.3-1
 - update to 3.2.3
 
 * Wed Oct 28 2015 David Tardon <dtardon@redhat.com> - 3.2.2-3
 - rebuild for ICU 56.1
 
-* Fri Oct 13 2015 Tom Callaway <spot@fedoraproject.org> - 3.2.2-2
+* Tue Oct 13 2015 Tom Callaway <spot@fedoraproject.org> - 3.2.2-2
 - apply patches from upstream bug 16497 to fix X11 hangs
 
 * Fri Aug 14 2015 Tom Callaway <spot@fedoraproject.org> - 3.2.2-1
