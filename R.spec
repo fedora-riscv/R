@@ -1,6 +1,15 @@
 # We do not want this.
 %define __brp_mangle_shebangs /usr/bin/true
 
+%global runjavareconf 1
+
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%ifarch ppc64 ppc64le
+%global runjavareconf 0
+%endif
+%endif
+
+
 %ifarch x86_64
 %global java_arch amd64
 %else
@@ -98,7 +107,7 @@
 %endif
 
 Name: R
-Version: 3.5.0
+Version: 3.5.1
 Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
@@ -124,7 +133,7 @@ Source106: https://cran.r-project.org/doc/FAQ/R-FAQ.html
 %global bzipv 1.0.6
 %global xzv 5.2.4
 %global pcrev 8.42
-%global curlv 7.59.0
+%global curlv 7.61.1
 Source1000: http://zlib.net/zlib-%{zlibv}.tar.gz
 Source1001: http://www.bzip.org/1.0.6/bzip2-%{bzipv}.tar.gz
 Source1002: http://tukaani.org/xz/xz-%{xzv}.tar.bz2
@@ -280,11 +289,11 @@ Provides: R-grDevices = %{version}
 Provides: R-grid = %{version}
 Provides: R-KernSmooth = 2.23.15
 Provides: R-lattice = 0.20.35
-Provides: R-MASS = 7.3.49
+Provides: R-MASS = 7.3.50
 Provides: R-Matrix = 1.2.14
 Obsoletes: R-Matrix < 0.999375-7
 Provides: R-methods = %{version}
-Provides: R-mgcv = 1.8.23
+Provides: R-mgcv = 1.8.24
 Provides: R-nlme = 3.1.137
 Provides: R-nnet = 7.3.12
 Provides: R-parallel = %{version}
@@ -293,7 +302,7 @@ Provides: R-spatial = 7.3.11
 Provides: R-splines = %{version}
 Provides: R-stats = %{version}
 Provides: R-stats4 = %{version}
-Provides: R-survival = 2.41.3
+Provides: R-survival = 2.42.3
 Provides: R-tcltk = %{version}
 Provides: R-tools = %{version}
 Provides: R-utils = %{version}
@@ -619,17 +628,24 @@ sed -i 's|@eqn|@math|g' doc/manual/R-intro.texi
 %if %{texi2any}
     make MAKEINFO=texi2any info
 %else
-    make MAKEINFO=makeinfo info
+# Well, this used to work, but now rhel 6 is too old and buggy.
+# make MAKEINFO=makeinfo info
 %endif
 
+%if %{texi2any}
 # Convert to UTF-8
 for i in doc/manual/R-intro.info doc/manual/R-FAQ.info doc/FAQ doc/manual/R-admin.info doc/manual/R-exts.info-1; do
   iconv -f iso-8859-1 -t utf-8 -o $i{.utf8,}
   mv $i{.utf8,}
 done
+%endif
 
 %install
+%if %{texi2any}
 make DESTDIR=${RPM_BUILD_ROOT} install install-info
+%else
+make DESTDIR=${RPM_BUILD_ROOT} install
+%endif
 # And now, undo the hack. :P
 %if 0%{?fedora} >= 19
 mv doc/manual/R-exts.texi.spot doc/manual/R-exts.texi
@@ -730,7 +746,7 @@ mv %{buildroot}%{_libdir}/R/lib/libRblas.so %{buildroot}%{_libdir}/R/lib/libRref
 %if 0%{?zlibhack}
 # Most of these tests pass. Some don't. All pieces belong to you.
 %else
-%ifnarch ppc64 ppc64le
+%ifnarch ppc64 ppc64le armv7hl
 # Needed by tests/ok-error.R, which will smash the stack on PPC64. This is the purpose of the test.
 ulimit -s 16384
 TZ="Europe/Paris" make check
@@ -747,6 +763,7 @@ for doc in admin exts FAQ intro lang; do
    fi
 done
 /sbin/ldconfig
+%if %{runjavareconf}
 R CMD javareconf \
     JAVA_HOME=%{_jvmdir}/jre \
     JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \
@@ -755,6 +772,7 @@ R CMD javareconf \
     -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \
     JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \
     > /dev/null 2>&1 || exit 0
+%endif
 
 # With 2.10.0, we no longer need to do any of this.
 
@@ -791,16 +809,7 @@ fi
 
 %if %{modern}
 %post java
-R CMD javareconf \
-    JAVA_HOME=%{_jvmdir}/jre \
-    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \
-    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \
-    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch} \
-    -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \
-    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \
-    > /dev/null 2>&1 || exit 0
-
-%post java-devel
+%if %{runjavareconf}
 R CMD javareconf \
     JAVA_HOME=%{_jvmdir}/jre \
     JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \
@@ -811,6 +820,19 @@ R CMD javareconf \
     > /dev/null 2>&1 || exit 0
 %endif
 
+%post java-devel
+%if %{runjavareconf}
+R CMD javareconf \
+    JAVA_HOME=%{_jvmdir}/jre \
+    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \
+    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \
+    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch} \
+    -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \
+    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \
+    > /dev/null 2>&1 || exit 0
+%endif
+%endif
+
 %post -n libRmath -p /sbin/ldconfig
 
 %postun -n libRmath -p /sbin/ldconfig
@@ -819,11 +841,10 @@ R CMD javareconf \
 # Metapackage
 
 %files core
-%defattr(-, root, root, -)
 %{_bindir}/R
 %{_bindir}/Rscript
 %{_datadir}/R/
-%{_datadir}/texmf/
+%{_datadir}/texmf/tex/latex/R
 # Have to break this out for the translations
 %dir %{_libdir}/R/
 %{_libdir}/R/bin/
@@ -1134,7 +1155,9 @@ R CMD javareconf \
 # %%{_libdir}/R/NEWS*
 %{_libdir}/R/SVN-REVISION
 /usr/lib/rpm/R-make-search-index.sh
+%if %{texi2any}
 %{_infodir}/R-*.info*
+%endif
 %{macrosdir}/macros.R
 %{_mandir}/man1/*
 %{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
@@ -1142,7 +1165,6 @@ R CMD javareconf \
 /etc/ld.so.conf.d/*
 
 %files core-devel
-%defattr(-, root, root, -)
 %{_libdir}/pkgconfig/libR.pc
 %{_includedir}/R
 # Symlink to %%{_includedir}/R/
@@ -1160,23 +1182,41 @@ R CMD javareconf \
 %endif
 
 %files -n libRmath
-%defattr(-, root, root, -)
 %doc doc/COPYING
 %{_libdir}/libRmath.so
 
 %files -n libRmath-devel
-%defattr(-, root, root, -)
 %{_includedir}/Rmath.h
 %{_libdir}/pkgconfig/libRmath.pc
 
 %files -n libRmath-static
-%defattr(-, root, root, -)
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Sep 10 2018 Tom Callaway <spot@fedoraproject.org> - 3.5.1-1
+- update to 3.5.1
+- update bundled curl to 7.61.1
+
+* Thu Jul 12 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.5.0-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Tue Jul 10 2018 Pete Walter <pwalter@fedoraproject.org> - 3.5.0-5
+- Rebuild for ICU 62
+
+* Tue Jun  5 2018 Tom Callaway <spot@fedoraproject.org> - 3.5.0-4
+- only own /usr/share/texmf/tex/latex/R ... not /usr/share/texmf
+
+* Fri May 18 2018 Tom Callaway <spot@fedoraproject.org> - 3.5.0-3
+- do not run javareconf on el6/ppc64 EVEN in the java subpackages
+
+* Fri May 18 2018 Tom Callaway <spot@fedoraproject.org> - 3.5.0-2
+- do not run javareconf on el6/ppc64
+
 * Mon May 14 2018 Tom Callaway <spot@fedoraproject.org> - 3.5.0-1
 - update to 3.5.0
 - update xz bundle (rhel6 only)
+- disable tests on armv7hl
+- disable info builds on rhel 6
 
 * Sun May 13 2018 Stefan O'Rear <sorear2@gmail.com> - 3.4.4-3
 - Add riscv* to target CPU specs
