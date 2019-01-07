@@ -107,7 +107,7 @@
 %endif
 
 Name: R
-Version: 3.5.1
+Version: 3.5.2
 Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
@@ -133,7 +133,7 @@ Source106: https://cran.r-project.org/doc/FAQ/R-FAQ.html
 %global bzipv 1.0.6
 %global xzv 5.2.4
 %global pcrev 8.42
-%global curlv 7.61.1
+%global curlv 7.63.0
 Source1000: http://zlib.net/zlib-%{zlibv}.tar.gz
 Source1001: http://www.bzip.org/1.0.6/bzip2-%{bzipv}.tar.gz
 Source1002: http://tukaani.org/xz/xz-%{xzv}.tar.bz2
@@ -594,6 +594,7 @@ export FCFLAGS="%{optflags}"
     --enable-BLAS-shlib \
     --enable-R-shlib \
     --enable-prebuilt-html \
+    --enable-memory-profiling \
 %if %{with_lto}
 %ifnarch %{arm}
     --enable-lto \
@@ -708,7 +709,7 @@ fi
 if [ ! -d "$RPM_BUILD_ROOT%{_datadir}/texmf/tex/latex/R" ]; then
 	mkdir -p $RPM_BUILD_ROOT%{_datadir}/texmf/tex/latex
 	pushd $RPM_BUILD_ROOT%{_datadir}/texmf/tex/latex
-	ln -s ../../../R/texmf/tex/latex R
+	ln -s %{_datadir}/R/texmf/tex/latex R
 	popd
 fi
 
@@ -1193,6 +1194,12 @@ R CMD javareconf \
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Jan  7 2019 Tom Callaway <spot@fedoraproject.org> - 3.5.2-1
+- update to 3.5.2
+
+* Fri Dec  7 2018 Tom Callaway <spot@fedoraproject.org> - 3.5.1-2
+- use absolute path in symlink for latex dir (bz1594102)
+
 * Mon Sep 10 2018 Tom Callaway <spot@fedoraproject.org> - 3.5.1-1
 - update to 3.5.1
 - update bundled curl to 7.61.1
