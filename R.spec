@@ -9,7 +9,6 @@
 %endif
 %endif
 
-
 %ifarch x86_64
 %global java_arch amd64
 %else
@@ -107,8 +106,8 @@
 %endif
 
 Name: R
-Version: 3.5.2
-Release: 2%{?dist}
+Version: 3.5.3
+Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-3/R-%{version}.tar.gz
@@ -159,7 +158,6 @@ BuildRequires: stunnel
 # see https://bugzilla.redhat.com/show_bug.cgi?id=1324145
 Patch1: R-3.3.0-fix-java_path-in-javareconf.patch
 License: GPLv2+
-Group: Applications/Engineering
 BuildRequires: gcc-gfortran
 BuildRequires: gcc-c++, tex(latex), texinfo-tex
 BuildRequires: libpng-devel, libjpeg-devel, readline-devel
@@ -254,7 +252,6 @@ and called at run time.
 
 %package core
 Summary: The minimal R components necessary for a functional runtime
-Group: Applications/Engineering
 Requires: xdg-utils, cups
 # R inherits the compiler flags it was built with, hence we need this on hardened systems
 %if 0%{hardening}
@@ -283,21 +280,21 @@ Requires: openblas-Rblas
 # packager convenience.
 Provides: R-base = %{version}
 Provides: R-boot = 1.3.20
-Provides: R-class = 7.3.14
+Provides: R-class = 7.3.15
 Provides: R-cluster = 2.0.7.1
-Provides: R-codetools = 0.2.15
+Provides: R-codetools = 0.2.16
 Provides: R-datasets = %{version}
-Provides: R-foreign = 0.8.70
+Provides: R-foreign = 0.8.71
 Provides: R-graphics = %{version}
 Provides: R-grDevices = %{version}
 Provides: R-grid = %{version}
 Provides: R-KernSmooth = 2.23.15
-Provides: R-lattice = 0.20.35
-Provides: R-MASS = 7.3.50
-Provides: R-Matrix = 1.2.14
+Provides: R-lattice = 0.20.38
+Provides: R-MASS = 7.3.51.1
+Provides: R-Matrix = 1.2.15
 Obsoletes: R-Matrix < 0.999375-7
 Provides: R-methods = %{version}
-Provides: R-mgcv = 1.8.24
+Provides: R-mgcv = 1.8.27
 Provides: R-nlme = 3.1.137
 Provides: R-nnet = 7.3.12
 Provides: R-parallel = %{version}
@@ -306,7 +303,7 @@ Provides: R-spatial = 7.3.11
 Provides: R-splines = %{version}
 Provides: R-stats = %{version}
 Provides: R-stats4 = %{version}
-Provides: R-survival = 2.42.3
+Provides: R-survival = 2.43.3
 Provides: R-tcltk = %{version}
 Provides: R-tools = %{version}
 Provides: R-utils = %{version}
@@ -327,7 +324,6 @@ and called at run time.
 
 %package core-devel
 Summary: Core files for development of R packages (no Java)
-Group: Applications/Engineering
 Requires: R-core = %{version}-%{release}
 # You need all the BuildRequires for the development version
 Requires: gcc-c++, gcc-gfortran, tex(latex), texinfo-tex
@@ -365,7 +361,7 @@ Requires: tex(cm-super-ts1.enc)
 Requires: qpdf
 %endif
 
-Provides: R-Matrix-devel = 1.2.14
+Provides: R-Matrix-devel = 1.2.15
 Obsoletes: R-Matrix-devel < 0.999375-7
 
 %if %{modern}
@@ -384,7 +380,6 @@ Requires: R-core-devel = %{version}-%{release}
 %if %{modern}
 Requires: R-java-devel = %{version}-%{release}
 %else
-Group: Development/Libraries
 %endif
 
 %description devel
@@ -394,7 +389,6 @@ environment.
 %if %{modern}
 %package java
 Summary: R with Fedora provided Java Runtime Environment
-Group: Applications/Engineering
 Requires(post): R-core = %{version}-%{release}
 %if %{with_java_headless}
 Requires: java-headless
@@ -421,7 +415,6 @@ Fedora's openJDK.
 
 %package java-devel
 Summary: Development package for use with Java enabled R components
-Group: Applications/Engineering
 Requires(post): R-core-devel = %{version}-%{release}
 Requires(post): java-devel
 
@@ -432,7 +425,6 @@ that assume java is present and configured on the system.
 
 %package -n libRmath
 Summary: Standalone math library from the R project
-Group: Development/Libraries
 
 %description -n libRmath
 A standalone library of mathematical and statistical functions derived
@@ -440,7 +432,6 @@ from the R project.  This package provides the shared libRmath library.
 
 %package -n libRmath-devel
 Summary: Headers from the R Standalone math library
-Group: Development/Libraries
 Requires: libRmath = %{version}-%{release}, pkgconfig
 
 %description -n libRmath-devel
@@ -449,7 +440,6 @@ from the R project.  This package provides the libRmath header files.
 
 %package -n libRmath-static
 Summary: Static R Standalone math library
-Group: Development/Libraries
 Requires: libRmath-devel = %{version}-%{release}
 
 %description -n libRmath-static
@@ -765,14 +755,6 @@ TZ="Europe/Paris" make check
 %endif
 
 %post core
-# Create directory entries for info files
-# (optional doc files, so we must check that they are installed)
-for doc in admin exts FAQ intro lang; do
-   file=%{_infodir}/R-${doc}.info.gz
-   if [ -e $file ]; then
-      /sbin/install-info ${file} %{_infodir}/dir 2>/dev/null || :
-   fi
-done
 /sbin/ldconfig
 %if %{runjavareconf}
 R CMD javareconf \
@@ -796,18 +778,6 @@ R CMD javareconf \
 # %__cat %{_datadir}/R/library/*/CONTENTS >> %{_docdir}/R-%{version}/html/search/index.txt 2>/dev/null || exit 0
 # Don't use .. based paths, substitute /usr/share/R
 # sed -i "s!../../..!/usr/share/R!g" %{_docdir}/R-%{version}/html/search/index.txt
-
-
-%preun core
-if [ $1 = 0 ]; then
-   # Delete directory entries for info files (if they were installed)
-   for doc in admin exts FAQ intro lang; do
-      file=%{_infodir}/R-${doc}.info.gz
-      if [ -e ${file} ]; then
-         /sbin/install-info --delete R-${doc} %{_infodir}/dir 2>/dev/null || :
-      fi
-   done
-fi
 
 %postun core
 /sbin/ldconfig
@@ -844,9 +814,7 @@ R CMD javareconf \
 %endif
 %endif
 
-%post -n libRmath -p /sbin/ldconfig
-
-%postun -n libRmath -p /sbin/ldconfig
+%ldconfig_scriptlets -n libRmath
 
 %files
 # Metapackage
@@ -1204,6 +1172,18 @@ R CMD javareconf \
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Mar 11 2019 Tom Callaway <spot@fedoraproject.org> - 3.5.3-1
+- update to 3.5.3
+
+* Sun Feb 17 2019 Igor Gnatenko <ignatenkobrain@fedoraproject.org> - 3.5.2-5
+- Rebuild for readline 8.0
+
+* Thu Jan 31 2019 Fedora Release Engineering <releng@fedoraproject.org> - 3.5.2-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
+* Wed Jan 23 2019 Pete Walter <pwalter@fedoraproject.org> - 3.5.2-3
+- Rebuild for ICU 63
+
 * Tue Jan  8 2019 Tom Callaway <spot@fedoraproject.org> - 3.5.2-2
 - handle pcre2 use/detection
 
