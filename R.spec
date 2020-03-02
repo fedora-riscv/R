@@ -3,6 +3,38 @@
 
 %global runjavareconf 1
 
+# lapack comes from openblas, whenever possible.
+# We decided to implement this change in Fedora 32+ and EPEL-8 only.
+# This was to minimize the impact on end-users who might have R modules
+# installed locally with the old dependency on libRlapack.so
+%if 0%{?fedora} >= 32
+%global syslapack 1
+%else
+%if 0%{?rhel} && 0%{?rhel} >= 8
+%global syslapack 1
+%else
+%global syslapack 0
+%endif
+%endif
+
+%if 0%{?rhel} >= 8
+ %global openblas 1
+%else
+ %if 0%{?rhel} == 7
+  %ifarch x86_64 %{ix86} armv7hl %{power64} aarch64
+   %global openblas 1
+  %else
+   %global openblas 0
+  %endif
+ %else
+  %if 0%{?fedora}
+   %global openblas 1
+  %else
+   %global openblas 0
+  %endif
+ %endif
+%endif
+
 %if 0%{?fedora} >= 31
 %global usemacros 1
 %else
@@ -114,22 +146,8 @@
 %global texi2any 1
 %endif
 
-%ifarch x86_64 %{ix86} armv7hl %{power64} aarch64
-%if 0%{?rhel} >= 7
-%global openblas 1
-%else
-%if 0%{?fedora} >= 23
-%global openblas 1
-%else
-%global openblas 0
-%endif
-%endif
-%else
-%global openblas 0
-%endif
-
 Name: R
-Version: 3.6.2
+Version: 3.6.3
 Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
@@ -178,11 +196,6 @@ BuildRequires: stunnel
 %endif
 # see https://bugzilla.redhat.com/show_bug.cgi?id=1324145
 Patch1: R-3.3.0-fix-java_path-in-javareconf.patch
-# PowerPC64 when gcc is compiled with -mlong-double-128
-# cannot assign values to const long double vars
-# because "the middle-end does not constant fold 128bit IBM long double"
-# http://gcc.gnu.org/bugzilla/show_bug.cgi?id=26374
-Patch2: R-3.6.2-ppc64-no-const-long-double.patch
 License: GPLv2+
 BuildRequires: gcc-gfortran
 BuildRequires: gcc-c++, tex(latex), texinfo-tex
@@ -223,19 +236,10 @@ BuildRequires: autoconf, automake, libtool
 BuildRequires: openblas-devel
 %endif
 
-# We use the bundled lapack and shim for BLAS now.
-%if 0
-%if 0%{?fedora} >= 21
+%if %{syslapack}
+%if !%{openblas}
 BuildRequires: lapack-devel >= 3.5.0-7
 BuildRequires: blas-devel >= 3.5.0-7
-%else
-%if 0%{?fedora} >= 19
-BuildRequires: lapack-devel >= 3.4.2-7
-BuildRequires: blas-devel >= 3.4.2-7
-%else
-BuildRequires: lapack-devel
-BuildRequires: blas-devel >= 3.0
-%endif
 %endif
 %endif
 
@@ -301,8 +305,10 @@ Requires: sed, gawk, tex(latex), less, make, unzip
 # Make sure we bring the new libRmath with us
 Requires: libRmath%{?_isa} = %{version}-%{release}
 
+%if !%{syslapack}
 %if %{openblas}
 Requires: openblas-Rblas
+%endif
 %endif
 
 %if %{use_devtoolset}
@@ -321,24 +327,24 @@ Requires: devtoolset-%{dts_version}-toolchain
   print("Provides: R(" .. name .. ") = " .. version)
 }
 %add_submodule base %{version}
-%add_submodule boot 1.3-23
+%add_submodule boot 1.3-24
 %add_submodule class 7.3-15
 %add_submodule cluster 2.1.0
 %add_submodule codetools 0.2-16
 %add_submodule compiler %{version}
 %add_submodule datasets %{version}
-%add_submodule foreign 0.8-72
+%add_submodule foreign 0.8-75
 %add_submodule graphics %{version}
 %add_submodule grDevices %{version}
 %add_submodule grid %{version}
 %add_submodule KernSmooth 2.23-16
 %add_submodule lattice 0.20-38
-%add_submodule MASS 7.3-51.4
+%add_submodule MASS 7.3-51.5
 %add_submodule Matrix 1.2-18
 Obsoletes: R-Matrix < 0.999375-7
 %add_submodule methods %{version}
 %add_submodule mgcv 1.8-31
-%add_submodule nlme 3.1-142
+%add_submodule nlme 3.1-144
 %add_submodule nnet 7.3-12
 %add_submodule parallel %{version}
 %add_submodule rpart 4.1-15
@@ -379,8 +385,11 @@ Requires: pcre-devel
 # Configure picks this up, but despite linking to it, it does not seem to be used as of R 3.5.2.
 Requires: pcre2-devel
 %endif
-# No longer true.
-# Requires: blas-devel >= 3.0, lapack-devel
+%if %{syslapack}
+%if %{openblas}
+Requires: openblas-devel
+%endif
+%endif
 %if %{modern}
 Requires: libicu-devel
 %endif
@@ -500,7 +509,6 @@ from the R project.  This package provides the static libRmath library.
 %setup -q -n %{name}-%{version}
 %endif
 %patch1 -p1 -b .fixpath
-%patch2 -p1 -b .ppc64
 
 # Filter false positive provides.
 cat <<EOF > %{name}-prov
@@ -632,7 +640,7 @@ export FFLAGS="%{optflags} --no-optimize-sibling-calls"
 # https://bugzilla.redhat.com/show_bug.cgi?id=1117496
 # https://bugzilla.redhat.com/show_bug.cgi?id=1117497
 #
-# We use --enable-BLAS-shlib here. It generates a shared library
+# On old RHEL, we use --enable-BLAS-shlib here. It generates a shared library
 # of the R bundled blas, that can be replaced by an optimized version.
 # It also results in R using the bundled lapack copy.
 
@@ -644,14 +652,17 @@ export FFLAGS="%{optflags} --no-optimize-sibling-calls"
     --with-system-tre \
 %endif
     --with-system-valgrind-headers \
-%if 0%{?fedora}
+%if %{syslapack}
     --with-lapack \
+    --with-blas \
+%else
+    --enable-BLAS-shlib \
 %endif
     --with-tcl-config=%{_libdir}/tclConfig.sh \
     --with-tk-config=%{_libdir}/tkConfig.sh \
-    --enable-BLAS-shlib \
     --enable-R-shlib \
     --enable-prebuilt-html \
+    --enable-R-profiling \
     --enable-memory-profiling \
 %if %{with_lto}
 %ifnarch %{arm}
@@ -788,9 +799,11 @@ sed -i 's|:/builddir/build/BUILD/R-%{version}/curl-%{curlv}/target%{_libdir}/:/b
 sed -i 's|/builddir/build/BUILD/R-%{version}/curl-%{curlv}/target%{_libdir}/:/builddir/build/BUILD/R-%{version}/curl-%{curlv}/target%{_libdir}||g' %{buildroot}%{_libdir}/R/etc/ldpaths
 %endif
 
+%if !%{syslapack}
 %if %{openblas}
 # Rename the R blas so.
 mv %{buildroot}%{_libdir}/R/lib/libRblas.so %{buildroot}%{_libdir}/R/lib/libRrefblas.so
+%endif
 %endif
 
 # okay, look. its very clear that upstream does not run the test suite on any non-intel architectures.
@@ -1221,6 +1234,24 @@ R CMD javareconf \
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Mar  2 2020 Tom Callaway <spot@fedoraproject.org> - 3.6.3-1
+- update to 3.6.3
+- conditionalize lapack changes from previous commits to Fedora 32+ and EPEL-8
+
+* Tue Feb 18 2020 Tom Callaway <spot@fedoraproject.org> - 3.6.2-5
+- fix openblas conditionals, openblas has wider arch support everywhere except el7
+
+* Tue Feb 18 2020 Tom Callaway <spot@fedoraproject.org> - 3.6.2-4
+- fix conditionals so that Fedora builds against system openblas for lapack/blas
+  and we only generate the R lapack/blas libs on RHEL 5-6-7 (where system lapack/openblas
+  is not reliable). Thanks to Dirk Eddelbuettel for pointing out the error.
+
+* Tue Jan 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 3.6.2-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
+* Wed Dec 18 2019 Tom Callaway <spot@fedoraproject.org> - 3.6.2-2
+- adjust ppc64 patch to reflect upstream fix
+
 * Thu Dec 12 2019 Tom Callaway <spot@fedoraproject.org> - 3.6.2-1
 - update to 3.6.2
 - disable tests on all non-intel arches
