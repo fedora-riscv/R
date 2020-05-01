@@ -1,0 +1,12 @@
+diff -up R-3.6.3/src/library/grDevices/src/cairo/cairoFns.c.symbol R-3.6.3/src/library/grDevices/src/cairo/cairoFns.c
+--- R-3.6.3/src/library/grDevices/src/cairo/cairoFns.c.symbol	2020-05-01 12:16:01.605789337 +0200
++++ R-3.6.3/src/library/grDevices/src/cairo/cairoFns.c	2020-05-01 12:16:11.757724467 +0200
+@@ -464,7 +464,7 @@ static PangoFontDescription
+ 
+     fontdesc = pango_font_description_new();
+     if (face == 5)
+-	pango_font_description_set_family(fontdesc, "symbol");
++	pango_font_description_set_family(fontdesc, "OpenSymbol");
+     else {
+ 	const char *fm = gc->fontfamily;
+ 	if (!fm[0]) fm = family;

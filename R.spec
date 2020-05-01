@@ -37,11 +37,13 @@
 
 %if 0%{?fedora} >= 31
 %global usemacros 1
+%global symbolsfont 1
 %else
 %if 0%{?rhel} && 0%{?rhel} >= 8
 %global usemacros 1
 %else
 %global usemacros 0
+%global symbolsfont 0
 %endif
 %endif
 
@@ -148,7 +150,7 @@
 
 Name: R
 Version: 3.6.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-3/R-%{version}.tar.gz
@@ -258,6 +260,12 @@ BuildRequires: tex(upquote.sty)
 BuildRequires: devtoolset-%{dts_version}-toolchain
 %endif
 
+%if %{symbolsfont}
+# see https://bugzilla.redhat.com/show_bug.cgi?id=1815128
+Patch2: R-3.6.3-fix-symbol-font.patch
+BuildRequires: libreoffice-opensymbol-fonts
+%endif
+
 # R-devel will pull in R-core
 Requires: R-devel = %{version}-%{release}
 # libRmath-devel will pull in libRmath
@@ -314,6 +322,10 @@ Requires: openblas-Rblas
 %if %{use_devtoolset}
 # We need it for CXX11 and higher support.
 Requires: devtoolset-%{dts_version}-toolchain
+%endif
+
+%if %{symbolsfont}
+Requires: libreoffice-opensymbol-fonts
 %endif
 
 # These are the submodules that R-core provides. Sometimes R modules say they
@@ -509,6 +521,9 @@ from the R project.  This package provides the static libRmath library.
 %setup -q -n %{name}-%{version}
 %endif
 %patch1 -p1 -b .fixpath
+%if %{symbolsfont}
+%patch2 -p1 -b .symbol
+%endif
 
 # Filter false positive provides.
 cat <<EOF > %{name}-prov
@@ -1234,6 +1249,9 @@ R CMD javareconf \
 %{_libdir}/libRmath.a
 
 %changelog
+* Fri May  1 2020 Iñaki Úcar <iucar@fedoraproject.org> - 3.6.3-2
+- fix symbol font display with pango >= 1.44
+
 * Mon Mar  2 2020 Tom Callaway <spot@fedoraproject.org> - 3.6.3-1
 - update to 3.6.3
 - conditionalize lapack changes from previous commits to Fedora 32+ and EPEL-8
