@@ -260,9 +260,9 @@ BuildRequires: tex(upquote.sty)
 BuildRequires: devtoolset-%{dts_version}-toolchain
 %endif
 
-%if %{symbolsfont}
 # see https://bugzilla.redhat.com/show_bug.cgi?id=1815128
 Patch2: R-3.6.3-fix-symbol-font.patch
+%if %{symbolsfont}
 BuildRequires: libreoffice-opensymbol-fonts
 %endif
 
