@@ -4,10 +4,10 @@
 %global runjavareconf 1
 
 # lapack comes from openblas, whenever possible.
-# We decided to implement this change in Fedora 32+ and EPEL-8 only.
+# We decided to implement this change in Fedora 31+ and EPEL-8 only.
 # This was to minimize the impact on end-users who might have R modules
 # installed locally with the old dependency on libRlapack.so
-%if 0%{?fedora} >= 32
+%if 0%{?fedora} >= 31
 %global syslapack 1
 %else
 %if 0%{?rhel} && 0%{?rhel} >= 8
@@ -150,7 +150,7 @@
 
 Name: R
 Version: 3.6.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-3/R-%{version}.tar.gz
@@ -1249,6 +1249,9 @@ R CMD javareconf \
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Aug 31 2020 Tom Callaway <spot@fedoraproject.org> - 3.6.3-3
+- rebuild with syslapack on
+
 * Fri May  1 2020 Iñaki Úcar <iucar@fedoraproject.org> - 3.6.3-2
 - fix symbol font display with pango >= 1.44
 
