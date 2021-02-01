@@ -306,7 +306,11 @@ and called at run time.
 Summary: The minimal R components necessary for a functional runtime
 Requires: xdg-utils
 # Bugzilla 1875165
+%if 0%{?fedora} || 0%{?rhel} >= 8
 Recommends: cups
+%else
+Requires: cups
+%endif
 # R inherits the compiler flags it was built with, hence we need this on hardened systems
 %if 0%{hardening}
 Requires: redhat-rpm-config
