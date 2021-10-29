@@ -3,6 +3,19 @@
 
 %global runjavareconf 1
 
+%define javareconf() %{expand:
+%if %{runjavareconf}
+R CMD javareconf \\
+    JAVA_HOME=%{_jvmdir}/jre \\
+    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \\
+    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \\
+    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch}\ -L%{_jvmdir}/jre/lib/server \\
+    -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \\
+    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:%{_jvmdir}/jre/lib/server:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \\
+    > /dev/null 2>&1 || exit 0
+%endif
+}
+
 # lapack comes from openblas, whenever possible.
 # We decided to implement this change in Fedora 31+ and EPEL-8 only.
 # This was to minimize the impact on end-users who might have R modules
@@ -159,7 +172,7 @@
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -860,16 +873,6 @@ TZ="Europe/Paris" make check
 
 %post core
 /sbin/ldconfig
-%if %{runjavareconf}
-R CMD javareconf \
-    JAVA_HOME=%{_jvmdir}/jre \
-    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \
-    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \
-    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch}\ -L%{_jvmdir}/jre/lib/server \
-    -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \
-    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:%{_jvmdir}/jre/lib/server:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \
-    > /dev/null 2>&1 || exit 0
-%endif
 
 # With 2.10.0, we no longer need to do any of this.
 
@@ -890,32 +893,15 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %posttrans core
+%{javareconf}
 /usr/bin/mktexlsr %{_datadir}/texmf &>/dev/null || :
 
 %if %{modern}
-%post java
-%if %{runjavareconf}
-R CMD javareconf \
-    JAVA_HOME=%{_jvmdir}/jre \
-    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \
-    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \
-    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch}\ -L%{_jvmdir}/jre/lib/server \
-    -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \
-    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:%{_jvmdir}/jre/lib/server:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \
-    > /dev/null 2>&1 || exit 0
-%endif
+%posttrans java
+%{javareconf}
 
-%post java-devel
-%if %{runjavareconf}
-R CMD javareconf \
-    JAVA_HOME=%{_jvmdir}/jre \
-    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \
-    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \
-    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch}\ -L%{_jvmdir}/jre/lib/server \
-    -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \
-    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:%{_jvmdir}/jre/lib/server:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \
-    > /dev/null 2>&1 || exit 0
-%endif
+%posttrans java-devel
+%{javareconf}
 %endif
 
 %ldconfig_scriptlets -n libRmath
@@ -1287,6 +1273,9 @@ R CMD javareconf \
 %{_libdir}/libRmath.a
 
 %changelog
+* Fri Oct 29 2021 Iñaki Úcar <iucar@fedoraproject.org> - 4.1.1-2
+- Move javareconf to posttrans (bz 2009974)
+
 * Sat Aug 11 2021 Tom Callaway <spot@fedoraproject.org> - 4.1.1-1
 - update to 4.1.1
 
