@@ -168,11 +168,11 @@ R CMD javareconf \\
 
 %global major_version 4
 %global minor_version 1
-%global patch_version 1
+%global patch_version 2
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 2%{?dist}
+Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -377,13 +377,13 @@ Provides: R(ABI) = %{major_version}.%{minor_version}
 %add_submodule grDevices %{version}
 %add_submodule grid %{version}
 %add_submodule KernSmooth 2.23-20
-%add_submodule lattice 0.20-44
+%add_submodule lattice 0.20-45
 %add_submodule MASS 7.3-54
 %add_submodule Matrix 1.3-4
 Obsoletes: R-Matrix < 0.999375-7
 %add_submodule methods %{version}
-%add_submodule mgcv 1.8-36
-%add_submodule nlme 3.1-152
+%add_submodule mgcv 1.8-38
+%add_submodule nlme 3.1-153
 %add_submodule nnet 7.3-16
 %add_submodule parallel %{version}
 %add_submodule rpart 4.1-15
@@ -391,7 +391,7 @@ Obsoletes: R-Matrix < 0.999375-7
 %add_submodule splines %{version}
 %add_submodule stats %{version}
 %add_submodule stats4 %{version}
-%add_submodule survival 3.2-11
+%add_submodule survival 3.2-13
 %add_submodule tcltk %{version}
 %add_submodule tools %{version}
 %add_submodule translations %{version}
@@ -1273,6 +1273,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Wed Nov  3 2021 Tom Callaway <spot@fedoraproject.org> - 4.1.2-1
+- update to 4.1.2
+
 * Fri Oct 29 2021 Iñaki Úcar <iucar@fedoraproject.org> - 4.1.1-2
 - Move javareconf to posttrans (bz 2009974)
 
