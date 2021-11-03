@@ -1279,7 +1279,7 @@ fi
 * Fri Oct 29 2021 Iñaki Úcar <iucar@fedoraproject.org> - 4.1.1-2
 - Move javareconf to posttrans (bz 2009974)
 
-* Sat Aug 11 2021 Tom Callaway <spot@fedoraproject.org> - 4.1.1-1
+* Sat Aug 14 2021 Tom Callaway <spot@fedoraproject.org> - 4.1.1-1
 - update to 4.1.1
 
 * Wed Jul 21 2021 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-2
