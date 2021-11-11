@@ -1,6 +1,16 @@
 # We do not want this.
 %define __brp_mangle_shebangs /usr/bin/true
 
+# enabling LTO in Fedora 36 results in:
+# checking whether gfortran -m64 and gcc -m64 agree on double complex...
+# configure: WARNING: gfortran -m64 and gcc -m64 disagree on double
+# complex
+# AND that leads to
+#  Fortran complex functions are not available on this platform
+%if 0%{?fedora} >= 36
+%global _lto_cflags %nil
+%endif
+
 %global runjavareconf 1
 
 %define javareconf() %{expand:
