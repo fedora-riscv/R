@@ -182,7 +182,7 @@ R CMD javareconf \\
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -1283,6 +1283,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Wed Jan 19 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
 * Wed Nov  3 2021 Tom Callaway <spot@fedoraproject.org> - 4.1.2-1
 - update to 4.1.2
 
