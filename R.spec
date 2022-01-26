@@ -1,6 +1,10 @@
 # We do not want this.
 %define __brp_mangle_shebangs /usr/bin/true
 
+# The additional linker flags break binary R- packages.
+# https://bugzilla.redhat.com/show_bug.cgi?id=2046246
+%undefine _package_note_flags
+
 # enabling LTO in Fedora 36 results in:
 # checking whether gfortran -m64 and gcc -m64 agree on double complex...
 # configure: WARNING: gfortran -m64 and gcc -m64 disagree on double
@@ -182,7 +186,7 @@ R CMD javareconf \\
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -1283,6 +1287,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Wed Jan 26 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.2-3
+- disable _package_note_flags because it breaks R modules
+
 * Wed Jan 19 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.2-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
 
