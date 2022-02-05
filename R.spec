@@ -186,7 +186,7 @@ R CMD javareconf \\
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 3%{?dist}
+Release: 4%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -1287,6 +1287,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Sat Feb 05 2022 Jiri Vanek <jvanek@redhat.com> - 4.1.2-4
+- Rebuilt for java-17-openjdk as system jdk
+
 * Wed Jan 26 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.2-3
 - disable _package_note_flags because it breaks R modules
 
