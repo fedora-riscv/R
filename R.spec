@@ -11,7 +11,7 @@
 # complex
 # AND that leads to
 #  Fortran complex functions are not available on this platform
-%if 0%{?fedora} >= 36 || 0%{?rhel} >= 9
+%if 0%{?fedora} >= 35 || 0%{?rhel} >= 9
 %global _lto_cflags %nil
 %endif
 
