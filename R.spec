@@ -1,6 +1,20 @@
 # We do not want this.
 %define __brp_mangle_shebangs /usr/bin/true
 
+# The additional linker flags break binary R- packages.
+# https://bugzilla.redhat.com/show_bug.cgi?id=2046246
+%undefine _package_note_flags
+
+# enabling LTO in Fedora 36 results in:
+# checking whether gfortran -m64 and gcc -m64 agree on double complex...
+# configure: WARNING: gfortran -m64 and gcc -m64 disagree on double
+# complex
+# AND that leads to
+#  Fortran complex functions are not available on this platform
+%if 0%{?fedora} >= 36 || 0%{?rhel} >= 9
+%global _lto_cflags %nil
+%endif
+
 %global runjavareconf 1
 
 %define javareconf() %{expand:
@@ -168,7 +182,7 @@ R CMD javareconf \\
 
 %global major_version 4
 %global minor_version 1
-%global patch_version 2
+%global patch_version 3
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
@@ -367,27 +381,27 @@ Provides: R(ABI) = %{major_version}.%{minor_version}
 }
 %add_submodule base %{version}
 %add_submodule boot 1.3-28
-%add_submodule class 7.3-19
+%add_submodule class 7.3-20
 %add_submodule cluster 2.1.2
 %add_submodule codetools 0.2-18
 %add_submodule compiler %{version}
 %add_submodule datasets %{version}
-%add_submodule foreign 0.8-81
+%add_submodule foreign 0.8-82
 %add_submodule graphics %{version}
 %add_submodule grDevices %{version}
 %add_submodule grid %{version}
 %add_submodule KernSmooth 2.23-20
 %add_submodule lattice 0.20-45
-%add_submodule MASS 7.3-54
-%add_submodule Matrix 1.3-4
+%add_submodule MASS 7.3-55
+%add_submodule Matrix 1.4-0
 Obsoletes: R-Matrix < 0.999375-7
 %add_submodule methods %{version}
-%add_submodule mgcv 1.8-38
-%add_submodule nlme 3.1-153
-%add_submodule nnet 7.3-16
+%add_submodule mgcv 1.8-39
+%add_submodule nlme 3.1-155
+%add_submodule nnet 7.3-17
 %add_submodule parallel %{version}
-%add_submodule rpart 4.1-15
-%add_submodule spatial 7.3-14
+%add_submodule rpart 4.1.16
+%add_submodule spatial 7.3-15
 %add_submodule splines %{version}
 %add_submodule stats %{version}
 %add_submodule stats4 %{version}
@@ -457,7 +471,7 @@ Requires: tex(cm-super-ts1.enc)
 Requires: qpdf
 %endif
 
-Provides: R-Matrix-devel = 1.3.4
+Provides: R-Matrix-devel = 1.4.0
 Obsoletes: R-Matrix-devel < 0.999375-7
 
 %if %{modern}
@@ -1273,6 +1287,18 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Sat Mar 19 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.3-1
+- update to 4.1.3
+
+* Sat Feb 05 2022 Jiri Vanek <jvanek@redhat.com> - 4.1.2-4
+- Rebuilt for java-17-openjdk as system jdk
+
+* Wed Jan 26 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.2-3
+- disable _package_note_flags because it breaks R modules
+
+* Wed Jan 19 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
 * Wed Nov  3 2021 Tom Callaway <spot@fedoraproject.org> - 4.1.2-1
 - update to 4.1.2
 
