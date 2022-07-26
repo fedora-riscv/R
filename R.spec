@@ -25,6 +25,8 @@
 
 %if %{usejava}
 %global runjavareconf 1
+%else
+%global runjavareconf 0
 %endif
 
 %define javareconf() %{expand:
