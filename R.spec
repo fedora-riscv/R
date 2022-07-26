@@ -5,6 +5,14 @@
 # https://bugzilla.redhat.com/show_bug.cgi?id=2046246
 %undefine _package_note_flags
 
+%global usejava 1
+# Java i686 is gone as of Fedora 37.
+%if 0%{?fedora} >= 37
+%ifarch i686
+%global usejava 0
+%endif
+%endif
+
 # enabling LTO in Fedora 36 results in:
 # checking whether gfortran -m64 and gcc -m64 agree on double complex...
 # configure: WARNING: gfortran -m64 and gcc -m64 disagree on double
@@ -15,7 +23,9 @@
 %global _lto_cflags %nil
 %endif
 
+%if %{usejava}
 %global runjavareconf 1
+%endif
 
 %define javareconf() %{expand:
 %if %{runjavareconf}
@@ -79,6 +89,7 @@ R CMD javareconf \\
 %endif
 %endif
 
+%if %{usejava}
 %if 0%{?rhel} && 0%{?rhel} <= 6
 %ifarch ppc64 ppc64le
 %global runjavareconf 0
@@ -89,6 +100,7 @@ R CMD javareconf \\
 %global java_arch amd64
 %else
 %global java_arch %{_arch}
+%endif
 %endif
 
 # Assume not modern. Override if needed.
@@ -104,7 +116,9 @@ R CMD javareconf \\
 # We need to use system tre on F21+/RHEL7
 %if 0%{?fedora} >= 21
 %global system_tre 1
+%if %{usejava}
 %global with_java_headless 1
+%endif
 %endif
 
 # We need this on old EL for C++11 support.
@@ -186,7 +200,7 @@ R CMD javareconf \\
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -262,10 +276,12 @@ BuildRequires: libcurl-devel
 %ifarch %{ix86} x86_64 ppc ppc64 ppc64le s390x armv7hl aarch64
 BuildRequires: valgrind-devel
 %endif
+%if %{usejava}
 %if %{with_java_headless}
 BuildRequires: java-headless
 %else
 BuildRequires: java
+%endif
 %endif
 %if %{system_tre}
 BuildRequires: tre-devel
@@ -351,6 +367,16 @@ Requires: perl
 Requires: sed, gawk, tex(latex), less, make, unzip
 # Make sure we bring the new libRmath with us
 Requires: libRmath%{?_isa} = %{version}-%{release}
+%if %{modern} && %{usejava}
+# Do nothing.
+%else
+%if 0%{fedora} >= 37
+%ifarch i686
+Provides: R-java = %{version}-%{release}
+Obsoletes: R-java < 4.1.3-3
+%endif
+%endif
+%endif
 
 %if !%{syslapack}
 %if !%{flexiblas}
@@ -474,7 +500,7 @@ Requires: qpdf
 Provides: R-Matrix-devel = 1.4.0
 Obsoletes: R-Matrix-devel < 0.999375-7
 
-%if %{modern}
+%if %{modern} && %{usejava}
 %description core-devel
 Install R-core-devel if you are going to develop or compile R packages.
 This package does not configure the R environment for Java, install
@@ -490,16 +516,22 @@ Summary: Full R development environment metapackage
 Requires: R-rpm-macros
 %endif
 Requires: R-core-devel = %{version}-%{release}
-%if %{modern}
+%if %{modern} && %{usejava}
 Requires: R-java-devel = %{version}-%{release}
 %else
+%if 0%{fedora} >= 37
+%ifarch i686
+Provides: R-java-devel = %{version}-%{release}
+Obsoletes: R-java-devel < 4.1.3-3
+%endif
+%endif
 %endif
 
 %description devel
 This is a metapackage to install a complete (with Java) R development
 environment.
 
-%if %{modern}
+%if %{modern} && %{usejava}
 %package java
 Summary: R with Fedora provided Java Runtime Environment
 Requires(post): R-core = %{version}-%{release}
@@ -910,7 +942,7 @@ fi
 %{javareconf}
 /usr/bin/mktexlsr %{_datadir}/texmf &>/dev/null || :
 
-%if %{modern}
+%if %{modern} && %{usejava}
 %posttrans java
 %{javareconf}
 
@@ -1267,7 +1299,7 @@ fi
 %files devel
 # Nothing, all files provided by R-core-devel
 
-%if %{modern}
+%if %{modern} && %{usejava}
 %files java
 # Nothing, all files provided by R-core
 
@@ -1287,6 +1319,10 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Jul 25 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.3-3
+- add new "usejava" conditional
+- do not "usejava" when Fedora >= 37 and i686
+
 * Wed Jul 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.3-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
 
