@@ -197,12 +197,12 @@ R CMD javareconf \\
 %endif
 
 %global major_version 4
-%global minor_version 1
-%global patch_version 3
+%global minor_version 2
+%global patch_version 1
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 3%{?dist}
+Release: 1%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -410,7 +410,7 @@ Provides: R(ABI) = %{major_version}.%{minor_version}
 %add_submodule base %{version}
 %add_submodule boot 1.3-28
 %add_submodule class 7.3-20
-%add_submodule cluster 2.1.2
+%add_submodule cluster 2.1.3
 %add_submodule codetools 0.2-18
 %add_submodule compiler %{version}
 %add_submodule datasets %{version}
@@ -420,12 +420,12 @@ Provides: R(ABI) = %{major_version}.%{minor_version}
 %add_submodule grid %{version}
 %add_submodule KernSmooth 2.23-20
 %add_submodule lattice 0.20-45
-%add_submodule MASS 7.3-55
-%add_submodule Matrix 1.4-0
+%add_submodule MASS 7.3-57
+%add_submodule Matrix 1.4-1
 Obsoletes: R-Matrix < 0.999375-7
 %add_submodule methods %{version}
-%add_submodule mgcv 1.8-39
-%add_submodule nlme 3.1-155
+%add_submodule mgcv 1.8-40
+%add_submodule nlme 3.1-157
 %add_submodule nnet 7.3-17
 %add_submodule parallel %{version}
 %add_submodule rpart 4.1.16
@@ -433,7 +433,7 @@ Obsoletes: R-Matrix < 0.999375-7
 %add_submodule splines %{version}
 %add_submodule stats %{version}
 %add_submodule stats4 %{version}
-%add_submodule survival 3.2-13
+%add_submodule survival 3.3-1
 %add_submodule tcltk %{version}
 %add_submodule tools %{version}
 %add_submodule translations %{version}
@@ -499,7 +499,7 @@ Requires: tex(cm-super-ts1.enc)
 Requires: qpdf
 %endif
 
-Provides: R-Matrix-devel = 1.4.0
+Provides: R-Matrix-devel = 1.4.1
 Obsoletes: R-Matrix-devel < 0.999375-7
 
 %if %{modern} && %{usejava}
@@ -1192,7 +1192,6 @@ fi
 %{_libdir}/R/library/nlme/html/
 %{_libdir}/R/library/nlme/INDEX
 %{_libdir}/R/library/nlme/libs/
-%{_libdir}/R/library/nlme/LICENCE
 %{_libdir}/R/library/nlme/Meta/
 %{_libdir}/R/library/nlme/mlbook/
 %{_libdir}/R/library/nlme/NAMESPACE
@@ -1321,6 +1320,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Wed Jul 27 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-1
+- update to 4.2.1
+
 * Mon Jul 25 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.3-3
 - add new "usejava" conditional
 - do not "usejava" when Fedora >= 37 and i686
