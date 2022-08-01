@@ -206,7 +206,7 @@ R CMD javareconf \\
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -1326,6 +1326,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Aug 01 2022 Frantisek Zatloukal <fzatlouk@redhat.com> - 4.2.1-2
+- Rebuilt for ICU 71.1
+
 * Wed Jul 27 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-1
 - update to 4.2.1
 - disable the R test suite due to unknown failures on i686/x86_64 in koji (and only in koji)
