@@ -206,7 +206,7 @@ R CMD javareconf \\
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -1330,9 +1330,12 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
-* Mon Aug  8 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-2
+* Mon Aug  8 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-3
 - fix issue where Renviron was setting R_LIBS_SITE to an empty string, which makes it hard to find Fedora's noarch
   packages being installed into /usr/share.
+
+* Mon Aug 01 2022 Frantisek Zatloukal <fzatlouk@redhat.com> - 4.2.1-2
+- Rebuilt for ICU 71.1
 
 * Wed Jul 27 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-1
 - update to 4.2.1
