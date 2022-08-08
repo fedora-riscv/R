@@ -206,7 +206,7 @@ R CMD javareconf \\
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -664,6 +664,10 @@ popd
 %if %{use_devtoolset}
 . /opt/rh/devtoolset-%{dts_version}/enable
 %endif
+
+# Disable R_LIBS_SITE force to an empty string (we always define it at the end if not set, and this breaks that)
+# Thanks R 4.2
+sed -i "s|R_LIBS_SITE=\${R_LIBS_SITE:-'%%S'}|#R_LIBS_SITE=\${R_LIBS_SITE:-'%%S'}|g" etc/Renviron.in
 
 # Add PATHS to Renviron for R_LIBS_SITE
 echo 'R_LIBS_SITE=${R_LIBS_SITE-'"'/usr/local/lib/R/site-library:/usr/local/lib/R/library:%{_libdir}/R/library:%{_datadir}/R/library'"'}' >> etc/Renviron.in
@@ -1326,6 +1330,10 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Aug  8 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-2
+- fix issue where Renviron was setting R_LIBS_SITE to an empty string, which makes it hard to find Fedora's noarch
+  packages being installed into /usr/share.
+
 * Wed Jul 27 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-1
 - update to 4.2.1
 - disable the R test suite due to unknown failures on i686/x86_64 in koji (and only in koji)
