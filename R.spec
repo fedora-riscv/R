@@ -1,88 +1,32 @@
-# We do not want this.
+# We do not want this (we need +x on files in %%{_libdir}/R/bin/)
 %define __brp_mangle_shebangs /usr/bin/true
 
-# The additional linker flags break binary R- packages.
+# The additional linker flags break binary R- packages
 # https://bugzilla.redhat.com/show_bug.cgi?id=2046246
 %undefine _package_note_flags
 
-# enabling LTO in Fedora 36 results in:
-# checking whether gfortran -m64 and gcc -m64 agree on double complex...
-# configure: WARNING: gfortran -m64 and gcc -m64 disagree on double
-# complex
-# AND that leads to
-#  Fortran complex functions are not available on this platform
-%if 0%{?fedora} >= 36 || 0%{?rhel} >= 9
+# Fedora 37 is failing tests mysteriously on i686 and x86_64 but only on koji
+# Disable tests for now, hopefully re-enable later?
+%bcond_with tests
+
+# Using LTO breaks debuginfo (probably not true anymore?)
+# https://bugzilla.redhat.com/show_bug.cgi?id=1113404
+# Also, enabling LTO in Fedora 36 results in:
+# checking whether gfortran and gcc agree on double complex...
+# configure: WARNING: gfortran and gcc disagree on double complex
+# AND that leads to Fortran complex functions are not available on this platform
+%bcond_with lto
+
+# We need at least gcc 10 anyway
+%global with_lto 1
+%if %{without lto} || 0%{?rhel} < 9
+%global with_lto 0
 %global _lto_cflags %nil
 %endif
 
-%global runjavareconf 1
-
-%define javareconf() %{expand:
-%if %{runjavareconf}
-R CMD javareconf \\
-    JAVA_HOME=%{_jvmdir}/jre \\
-    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \\
-    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \\
-    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch}\ -L%{_jvmdir}/jre/lib/server \\
-    -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \\
-    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:%{_jvmdir}/jre/lib/server:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \\
-    > /dev/null 2>&1 || exit 0
-%endif
-}
-
-# lapack comes from openblas, whenever possible.
-# We decided to implement this change in Fedora 31+ and EPEL-8 only.
-# This was to minimize the impact on end-users who might have R modules
-# installed locally with the old dependency on libRlapack.so
-
-%if 0%{?fedora} >= 31
-%global syslapack 1
-%else
-%if 0%{?rhel} && 0%{?rhel} >= 8
-%global syslapack 1
-%else
-%global syslapack 0
-%endif
-%endif
-
-%if 0%{?rhel} >= 8
- %global openblas 1
-%else
- %if 0%{?rhel} == 7
-  %ifarch x86_64 %{ix86} armv7hl %{power64} aarch64
-   %global openblas 1
-  %else
-   %global openblas 0
-  %endif
- %else
-  %if 0%{?fedora}
-   %global openblas 1
-  %else
-   %global openblas 0
-  %endif
- %endif
-%endif
-
-%if 0%{?fedora} >= 33
-%global flexiblas 1
-%else
-%global flexiblas 0
-%endif
-
-%if 0%{?fedora} >= 31
-%global usemacros 1
-%else
-%if 0%{?rhel} && 0%{?rhel} >= 8
-%global usemacros 1
-%else
-%global usemacros 0
-%endif
-%endif
-
-%if 0%{?rhel} && 0%{?rhel} <= 6
-%ifarch ppc64 ppc64le
-%global runjavareconf 0
-%endif
+# %%java_arches is not available for EPEL 8
+%if 0%{?rhel} < 9
+%global java_arches aarch64 ppc64le s390x x86_64
 %endif
 
 %ifarch x86_64
@@ -91,226 +35,84 @@ R CMD javareconf \\
 %global java_arch %{_arch}
 %endif
 
-# Assume not modern. Override if needed.
-%global modern 0
+%define javareconf() %{expand:
+R CMD javareconf \\
+    JAVA_HOME=%{_jvmdir}/jre \\
+    JAVA_CPPFLAGS='-I%{_jvmdir}/java/include\ -I%{_jvmdir}/java/include/linux' \\
+    JAVA_LIBS='-L%{_jvmdir}/jre/lib/%{java_arch}/server \\
+    -L%{_jvmdir}/jre/lib/%{java_arch}\ -L%{_jvmdir}/java/lib/%{java_arch}\ -L%{_jvmdir}/jre/lib/server \\
+    -L/usr/java/packages/lib/%{java_arch}\ -L/lib\ -L/usr/lib\ -ljvm' \\
+    JAVA_LD_LIBRARY_PATH=%{_jvmdir}/jre/lib/%{java_arch}/server:%{_jvmdir}/jre/lib/%{java_arch}:%{_jvmdir}/java/lib/%{java_arch}:%{_jvmdir}/jre/lib/server:/usr/java/packages/lib/%{java_arch}:/lib:/usr/lib \\
+    > /dev/null 2>&1 || exit 0
+}
 
-# Track if we're hardening (all current fedora and RHEL 7+)
-%global hardening 0
-
-%global with_lto 0
-%global with_java_headless 0
-
-%global system_tre 0
-# We need to use system tre on F21+/RHEL7
-%if 0%{?fedora} >= 21
-%global system_tre 1
-%global with_java_headless 1
-%endif
-
-# We need this on old EL for C++11 support.
-%if 0%{?rhel} && 0%{?rhel} <= 7
-%global use_devtoolset 1
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
+%global blaslib flexiblas
+%global blasvar %{nil}
 %else
-%global use_devtoolset 0
-%endif
-
-%if 0%{?rhel} == 7
-%global dts_version 8
-%endif
-
-%if 0%{?rhel} == 6
-%global dts_version 7
-%endif
-
-# Using lto breaks debuginfo.
-# %%if 0%%{?fedora} >= 19
-# %%global with_lto 1
-# %%endif
-
-%if 0%{?rhel} >= 7
-%global system_tre 1
-# %%global with_lto 1
-%global with_java_headless 1
-%global hardening 1
-%endif
-
-%if 0%{?fedora}
-%global modern 1
-%global hardening 1
-%endif
-
-%if 0%{?rhel} >= 6
-%global modern 1
-%endif
-
-# R really wants zlib 1.2.5, bzip2 1.0.6, xz 5.0.3, curl 7.28, and pcre 8.10+
-# These are too new for RHEL 5/6. HACKITY HACK TIME.
-%global zlibhack 0
-
-%if 0%{?rhel} == 5
-%global zlibhack 1
-%endif
-
-%if 0%{?rhel} == 6
-%global zlibhack 1
-%endif
-
-# RHEL 6 ppc64 doesn't have icu. Everyone else modern does.
-
-%if %{modern}
-%global libicu 1
-%else
-%global libicu 0
-%endif
-
-%if 0%{?rhel} == 6
-%ifarch ppc64
-%global libicu 0
-%endif
-%endif
-
-# default to 0.
-%global texi2any 0
-
-%if 0%{?fedora} >= 20
-%global texi2any 1
-%endif
-
-%if 0%{?rhel} >= 7
-%global texi2any 1
+%global blaslib openblas
+%global blasvar o
 %endif
 
 %global major_version 4
-%global minor_version 1
-%global patch_version 3
+%global minor_version 2
+%global patch_version 1
 
-Name: R
-Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 1%{?dist}
-Summary: A language for data analysis and graphics
-URL: http://www.r-project.org
-Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
-%if %{texi2any}
-# If we have texi2any 5.1+, we can generate the docs on the fly.
-# If not, we're building for a very old target (RHEL 6 or older)
-%else
-# In this case, we need to use pre-built manuals.
-# NOTE: These need to be updated for every new version.
-Source100: https://cran.r-project.org/doc/manuals/r-release/R-intro.html
-Source101: https://cran.r-project.org/doc/manuals/r-release/R-data.html
-Source102: https://cran.r-project.org/doc/manuals/r-release/R-admin.html
-Source103: https://cran.r-project.org/doc/manuals/r-release/R-exts.html
-Source104: https://cran.r-project.org/doc/manuals/r-release/R-lang.html
-Source105: https://cran.r-project.org/doc/manuals/r-release/R-ints.html
-Source106: https://cran.r-project.org/doc/FAQ/R-FAQ.html
-%endif
-%if %{zlibhack}
-%global zlibv 1.2.11
-%global bzipv 1.0.8
-%global xzv 5.2.5
-%global pcrev 8.44
-%global curlv 7.72.0
-Source1000: http://zlib.net/zlib-%{zlibv}.tar.gz
-Source1001: https://www.sourceware.org/pub/bzip2/bzip2-%{bzipv}.tar.gz
-Source1002: http://tukaani.org/xz/xz-%{xzv}.tar.bz2
-Source1003: https://ftp.pcre.org/pub/pcre/pcre-%{pcrev}.tar.bz2
-Source1004: https://curl.haxx.se/download/curl-%{curlv}.tar.bz2
-BuildRequires: make
-BuildRequires: glibc-devel
-BuildRequires: groff
-BuildRequires: krb5-libs
-BuildRequires: krb5-devel
-BuildRequires: libgssapi-devel
-BuildRequires: libidn-devel
-BuildRequires: libmetalink-devel
-BuildRequires: libssh2-devel
-BuildRequires: openldap
-BuildRequires: openldap-devel
-BuildRequires: openssl-devel
-BuildRequires: openssh-clients
-BuildRequires: openssh-server
-BuildRequires: pkgconfig
-BuildRequires: python
-BuildRequires: stunnel
-%endif
+Name:           R
+Version:        %{major_version}.%{minor_version}.%{patch_version}
+Release:        4%{?dist}
+Summary:        A language for data analysis and graphics
+
+License:        GPLv2+
+URL:            https://www.r-project.org
+Source0:        https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
 # see https://bugzilla.redhat.com/show_bug.cgi?id=1324145
-Patch1: R-3.3.0-fix-java_path-in-javareconf.patch
-License: GPLv2+
-BuildRequires: gcc-gfortran
-BuildRequires: gcc-c++, tex(latex), texinfo-tex
-BuildRequires: libpng-devel, libjpeg-devel, readline-devel
-BuildRequires: tcl-devel, tk-devel, ncurses-devel
-BuildRequires: pcre-devel, zlib-devel
-%if 0%{modern}
-# Fedora (at least rawhide) pulls this into the buildroot anyways, but lets be explicit for consistency
-BuildRequires: pcre2-devel
+Patch0:         R-3.3.0-fix-java_path-in-javareconf.patch
+
+BuildRequires:  gcc-gfortran
+BuildRequires:  gcc-c++
+BuildRequires:  libpng-devel
+BuildRequires:  libjpeg-devel
+BuildRequires:  libtiff-devel
+BuildRequires:  cairo-devel
+BuildRequires:  pango-devel
+BuildRequires:  readline-devel
+BuildRequires:  tcl-devel
+BuildRequires:  tk-devel
+BuildRequires:  ncurses-devel
+BuildRequires:  pcre2-devel
+BuildRequires:  libcurl-devel
+BuildRequires:  bzip2-devel
+BuildRequires:  xz-devel
+BuildRequires:  zlib-devel
+BuildRequires:  tre-devel
+BuildRequires:  %{blaslib}-devel
+BuildRequires:  libSM-devel
+BuildRequires:  libX11-devel
+BuildRequires:  libICE-devel
+BuildRequires:  libXt-devel
+BuildRequires:  libXmu-devel
+BuildRequires:  libicu-devel
+%ifarch %{valgrind_arches}
+BuildRequires:  valgrind-devel
 %endif
-%if 0%{?rhel}
- # RHEL older than 6
- %if 0%{?rhel} < 7
- # RHEL 5 used to use curl-devel, but it is now too old.
- #BuildRequires: curl-devel
- # RHEL newer than 6
- %else
-BuildRequires: libcurl-devel
- %endif
-# Fedora (assuming modern)
-%else
-BuildRequires: libcurl-devel
+%ifarch %{java_arches}
+BuildRequires:  java-headless
 %endif
-# valgrind is available only on selected arches
-%ifarch %{ix86} x86_64 ppc ppc64 ppc64le s390x armv7hl aarch64
-BuildRequires: valgrind-devel
-%endif
-%if %{with_java_headless}
-BuildRequires: java-headless
-%else
-BuildRequires: java
-%endif
-%if %{system_tre}
-BuildRequires: tre-devel
-BuildRequires: autoconf, automake, libtool
-%endif
-%if %{flexiblas}
-BuildRequires: flexiblas-devel
-%else
-%if %{openblas}
-BuildRequires: openblas-devel
-%endif
+BuildRequires:  autoconf
+BuildRequires:  automake
+BuildRequires:  libtool
+BuildRequires:  less
+BuildRequires:  tex(latex)
+BuildRequires:  texinfo-tex
+BuildRequires:  tex(upquote.sty)
+%if 0%{?fedora}
+# No inconsolata on RHEL tex
+BuildRequires:  tex(inconsolata.sty)
 %endif
 
-%if %{syslapack}
-%if !%{flexiblas}
-%if !%{openblas}
-BuildRequires: lapack-devel >= 3.5.0-7
-BuildRequires: blas-devel >= 3.5.0-7
-%endif
-%endif
-%endif
-
-BuildRequires: libSM-devel, libX11-devel, libICE-devel, libXt-devel
-BuildRequires: bzip2-devel, libXmu-devel, cairo-devel, libtiff-devel
-BuildRequires: pango-devel, xz-devel
-%if %{libicu}
-BuildRequires: libicu-devel
-%endif
-BuildRequires: less
-%if 0%{?fedora} >= 18
-BuildRequires: tex(inconsolata.sty)
-BuildRequires: tex(upquote.sty)
-%endif
-%if %{use_devtoolset}
-BuildRequires: devtoolset-%{dts_version}-toolchain
-%endif
-
-# R-devel will pull in R-core
-Requires: R-devel = %{version}-%{release}
-# libRmath-devel will pull in libRmath
-Requires: libRmath-devel = %{version}-%{release}
-%if %{modern}
-# Pull in Java bits (if you don't want this, use R-core)
-Requires: R-java = %{version}-%{release}
-%endif
+# R-devel will pull everything else
+Requires:       R-devel%{?_isa} = %{version}-%{release}
 
 %description
 This is a metapackage that provides both core R userspace and
@@ -330,44 +132,35 @@ computationally intensive tasks, C, C++ and Fortran code can be linked
 and called at run time.
 
 %package core
-Summary: The minimal R components necessary for a functional runtime
-Requires: xdg-utils
+Summary:        The minimal R components necessary for a functional runtime
+Requires:       libRmath%{?_isa} = %{version}-%{release}
+Requires:       xdg-utils
 # Bugzilla 1875165
-Recommends: cups
+Recommends:     cups
 # R inherits the compiler flags it was built with, hence we need this on hardened systems
-%if 0%{hardening}
-Requires: redhat-rpm-config
-%endif
-%if %{modern}
-Requires: tex(dvips), vi
-%else
-Requires: vim-minimal
-%endif
+Requires:       redhat-rpm-config
+Requires:       vi
 %if 0%{?fedora}
-Requires: perl-interpreter
+Requires:       perl-interpreter
 %else
-Requires: perl
+Requires:       perl
 %endif
-Requires: sed, gawk, tex(latex), less, make, unzip
-# Make sure we bring the new libRmath with us
-Requires: libRmath%{?_isa} = %{version}-%{release}
+Requires:       sed
+Requires:       gawk
+Requires:       tex(latex)
+Requires:       tex(dvips)
+Requires:       less
+Requires:       make
+Requires:       unzip
 
-%if !%{syslapack}
-%if !%{flexiblas}
-%if %{openblas}
-Requires: openblas-Rblas
-%endif
-%endif
-%endif
-
-%if %{use_devtoolset}
-# We need it for CXX11 and higher support.
-Requires: devtoolset-%{dts_version}-toolchain
+%ifnarch %{java_arches}
+Provides:       R-java = %{version}-%{release}
+Obsoletes:      R-java < 4.1.3-3
 %endif
 
 # This is our ABI provides to prevent mismatched installs.
 # R packages should autogenerate a Requires: R(ABI) based on the R they were built against.
-Provides: R(ABI) = %{major_version}.%{minor_version}
+Provides:       R(ABI) = %{major_version}.%{minor_version}
 
 # These are the submodules that R-core provides. Sometimes R modules say they
 # depend on one of these submodules rather than just R. These are provided for
@@ -379,37 +172,37 @@ Provides: R(ABI) = %{major_version}.%{minor_version}
   print("Provides: R-" .. name .. " = " .. rpm_version .. "\\n")
   print("Provides: R(" .. name .. ") = " .. rpm_version)
 }
-%add_submodule base %{version}
-%add_submodule boot 1.3-28
-%add_submodule class 7.3-20
-%add_submodule cluster 2.1.2
-%add_submodule codetools 0.2-18
-%add_submodule compiler %{version}
-%add_submodule datasets %{version}
-%add_submodule foreign 0.8-82
-%add_submodule graphics %{version}
-%add_submodule grDevices %{version}
-%add_submodule grid %{version}
-%add_submodule KernSmooth 2.23-20
-%add_submodule lattice 0.20-45
-%add_submodule MASS 7.3-55
-%add_submodule Matrix 1.4-0
-Obsoletes: R-Matrix < 0.999375-7
-%add_submodule methods %{version}
-%add_submodule mgcv 1.8-39
-%add_submodule nlme 3.1-155
-%add_submodule nnet 7.3-17
-%add_submodule parallel %{version}
-%add_submodule rpart 4.1.16
-%add_submodule spatial 7.3-15
-%add_submodule splines %{version}
-%add_submodule stats %{version}
-%add_submodule stats4 %{version}
-%add_submodule survival 3.2-13
-%add_submodule tcltk %{version}
-%add_submodule tools %{version}
-%add_submodule translations %{version}
-%add_submodule utils %{version}
+%add_submodule  base %{version}
+%add_submodule  boot 1.3-28
+%add_submodule  class 7.3-20
+%add_submodule  cluster 2.1.3
+%add_submodule  codetools 0.2-18
+%add_submodule  compiler %{version}
+%add_submodule  datasets %{version}
+%add_submodule  foreign 0.8-82
+%add_submodule  graphics %{version}
+%add_submodule  grDevices %{version}
+%add_submodule  grid %{version}
+%add_submodule  KernSmooth 2.23-20
+%add_submodule  lattice 0.20-45
+%add_submodule  MASS 7.3-57
+%add_submodule  Matrix 1.4-1
+Obsoletes:      R-Matrix < 0.999375-7
+%add_submodule  methods %{version}
+%add_submodule  mgcv 1.8-40
+%add_submodule  nlme 3.1-157
+%add_submodule  nnet 7.3-17
+%add_submodule  parallel %{version}
+%add_submodule  rpart 4.1.16
+%add_submodule  spatial 7.3-15
+%add_submodule  splines %{version}
+%add_submodule  stats %{version}
+%add_submodule  stats4 %{version}
+%add_submodule  survival 3.3-1
+%add_submodule  tcltk %{version}
+%add_submodule  tools %{version}
+%add_submodule  translations %{version}
+%add_submodule  utils %{version}
 
 %description core
 A language and environment for statistical computing and graphics.
@@ -426,55 +219,45 @@ computationally intensive tasks, C, C++ and Fortran code can be linked
 and called at run time.
 
 %package core-devel
-Summary: Core files for development of R packages (no Java)
-Requires: R-core = %{version}-%{release}
+Summary:        Core files for development of R packages (no Java)
+Requires:       R-core%{?_isa} = %{version}-%{release}
+Requires:       libRmath-devel%{?_isa} = %{version}-%{release}
 # You need all the BuildRequires for the development version
-Requires: gcc-c++, gcc-gfortran, tex(latex), texinfo-tex
-Requires: bzip2-devel, libX11-devel, zlib-devel
-Requires: tcl-devel, tk-devel, pkgconfig, xz-devel
-# This may go away at some point, possibly R 3.6?
-Requires: pcre-devel
-%if 0%{modern}
-# Configure picks this up, but despite linking to it, it does not seem to be used as of R 3.5.2.
-Requires: pcre2-devel
-%endif
-%if %{syslapack}
-%if %{flexiblas}
-Requires: flexiblas-devel
-%else
-%if %{openblas}
-Requires: openblas-devel
-%endif
-%endif
-%endif
-%if %{modern}
-Requires: libicu-devel
-%endif
-%if %{system_tre}
-Requires: tre-devel
-%endif
-# TeX files needed
-%if 0%{?fedora} >= 18
-Requires: tex(ecrm1000.tfm)
-Requires: tex(inconsolata.sty)
-Requires: tex(ptmr8t.tfm)
-Requires: tex(ptmb8t.tfm)
-Requires: tex(pcrr8t.tfm)
-Requires: tex(phvr8t.tfm)
-Requires: tex(ptmri8t.tfm)
-Requires: tex(ptmro8t.tfm)
-Requires: tex(cm-super-ts1.enc)
-%endif
+Requires:       gcc-gfortran
+Requires:       gcc-c++
+Requires:       pkgconfig
+Requires:       tcl-devel
+Requires:       tk-devel
+Requires:       pcre2-devel
+Requires:       bzip2-devel
+Requires:       xz-devel
+Requires:       zlib-devel
+Requires:       tre-devel
+Requires:       %{blaslib}-devel
+Requires:       libX11-devel
+Requires:       libicu-devel
+Requires:       tex(latex)
+Requires:       texinfo-tex
+Requires:       tex(ecrm1000.tfm)
+Requires:       tex(ptmr8t.tfm)
+Requires:       tex(ptmb8t.tfm)
+Requires:       tex(pcrr8t.tfm)
+Requires:       tex(phvr8t.tfm)
+Requires:       tex(ptmri8t.tfm)
+Requires:       tex(ptmro8t.tfm)
+Requires:       tex(cm-super-ts1.enc)
+%if 0%{?fedora}
+# No inconsolata on RHEL tex
+Requires:       tex(inconsolata.sty)
 # "‘qpdf’ is needed for checks on size reduction of PDFs"
 # qpdf is not in epel, and since 99% of R doesn't use it, we'll let it slide.
-%if 0%{?fedora}
-Requires: qpdf
+Requires:       qpdf
 %endif
 
-Provides: R-Matrix-devel = 1.4.0
-Obsoletes: R-Matrix-devel < 0.999375-7
+Provides:       R-Matrix-devel = 1.4.1
+Obsoletes:      R-Matrix-devel < 0.999375-7
 
-%if %{modern}
+%ifarch %{java_arches}
 %description core-devel
 Install R-core-devel if you are going to develop or compile R packages.
 This package does not configure the R environment for Java, install
@@ -485,29 +268,25 @@ Install R-core-devel if you are going to develop or compile R packages.
 %endif
 
 %package devel
-Summary: Full R development environment metapackage
-%if %{usemacros}
-Requires: R-rpm-macros
-%endif
-Requires: R-core-devel = %{version}-%{release}
-%if %{modern}
-Requires: R-java-devel = %{version}-%{release}
+Summary:        Full R development environment metapackage
+Requires:       R-rpm-macros
+Requires:       R-core-devel%{?_isa} = %{version}-%{release}
+%ifarch %{java_arches}
+Requires:       R-java-devel%{?_isa} = %{version}-%{release}
 %else
+Provides:       R-java-devel = %{version}-%{release}
+Obsoletes:      R-java-devel < 4.1.3-3
 %endif
 
 %description devel
 This is a metapackage to install a complete (with Java) R development
 environment.
 
-%if %{modern}
+%ifarch %{java_arches}
 %package java
-Summary: R with Fedora provided Java Runtime Environment
-Requires(post): R-core = %{version}-%{release}
-%if %{with_java_headless}
-Requires: java-headless
-%else
-Requires: java
-%endif
+Summary:        R with Fedora provided Java Runtime Environment
+Requires(post): R-core%{?_isa} = %{version}-%{release}
+Requires:       java-headless
 
 %description java
 A language and environment for statistical computing and graphics.
@@ -527,8 +306,9 @@ This package also has an additional dependency on java, as provided by
 Fedora's openJDK.
 
 %package java-devel
-Summary: Development package for use with Java enabled R components
-Requires(post): R-core-devel = %{version}-%{release}
+Summary:        Development package for use with Java enabled R components
+Requires:       R-java%{?_isa} = %{version}-%{release}
+Requires(post): R-core-devel%{?_isa} = %{version}-%{release}
 Requires(post): java-devel
 
 %description java-devel
@@ -537,35 +317,32 @@ that assume java is present and configured on the system.
 %endif
 
 %package -n libRmath
-Summary: Standalone math library from the R project
+Summary:        Standalone math library from the R project
 
 %description -n libRmath
 A standalone library of mathematical and statistical functions derived
 from the R project.  This package provides the shared libRmath library.
 
 %package -n libRmath-devel
-Summary: Headers from the R Standalone math library
-Requires: libRmath = %{version}-%{release}, pkgconfig
+Summary:        Headers from the R Standalone math library
+Requires:       libRmath%{?_isa} = %{version}-%{release}
+Requires:       pkgconfig
 
 %description -n libRmath-devel
 A standalone library of mathematical and statistical functions derived
 from the R project.  This package provides the libRmath header files.
 
 %package -n libRmath-static
-Summary: Static R Standalone math library
-Requires: libRmath-devel = %{version}-%{release}
+Summary:        Static R Standalone math library
+Requires:       libRmath-devel%{?_isa} = %{version}-%{release}
 
 %description -n libRmath-static
 A standalone library of mathematical and statistical functions derived
 from the R project.  This package provides the static libRmath library.
 
 %prep
-%if %{zlibhack}
-%setup -q -n %{name}-%{version} -a 1000 -a 1001 -a 1002 -a 1003 -a 1004
-%else
-%setup -q -n %{name}-%{version}
-%endif
-%patch1 -p1 -b .fixpath
+%setup -q
+%patch0 -p1 -b .fixpath
 
 # Filter false positive provides.
 cat <<EOF > %{name}-prov
@@ -587,45 +364,9 @@ EOF
 chmod +x %{__perl_requires}
 
 %build
-# If you're seeing this, I'm sorry. This is ugly.
-# But short of updating RHEL 5/6 (which isn't happening), this is the best worst way to keep R working.
-%if %{zlibhack}
-pushd zlib-%{zlibv}
-./configure --libdir=%{_libdir} --includedir=%{_includedir} --prefix=%{_prefix} --static
-make %{?_smp_mflags} CFLAGS='%{optflags} -fpic -fPIC'
-mkdir -p target
-make DESTDIR=./target install
-popd
-pushd bzip2-%{bzipv}
-make %{?_smp_mflags} libbz2.a CC="%{__cc}" AR="%{__ar}" RANLIB="%{__ranlib}" CFLAGS="$RPM_OPT_FLAGS -D_FILE_OFFSET_BITS=64 -fpic -fPIC" LDFLAGS="%{__global_ldflags}"
-mkdir -p target%{_libdir}
-mkdir -p target%{_includedir}
-cp -p bzlib.h target%{_includedir}
-install -m 644 libbz2.a target%{_libdir}
-popd
-pushd xz-%{xzv}
-CFLAGS="%{optflags} -fpic -fPIC" %configure --enable-static=yes --enable-shared=no
-make %{?_smp_mflags}
-mkdir -p target
-make DESTDIR=%{_builddir}/%{name}-%{version}/xz-%{xzv}/target install
-popd
-pushd pcre-%{pcrev}
-CFLAGS="%{optflags} -fpic -fPIC" %configure --enable-static=yes --enable-shared=no --enable-utf --enable-unicode-properties --enable-pcre8 --enable-pcre16 --enable-pcre32
-make %{?_smp_mflags}
-mkdir -p target
-make DESTDIR=%{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target install
-popd
-pushd curl-%{curlv}
-CFLAGS="%{optflags} -fpic -fPIC" %configure --enable-static=yes --enable-shared=no --with-ssl --enable-ipv6 --with-ca-bundle=%{_sysconfdir}/pki/tls/certs/ca-bundle.crt --with-gssapi --with-libidn --enable-ldaps --with-libssh2 --enable-threaded-resolver --with-libmetalink
-make %{?_smp_mflags} V=1
-mkdir -p target
-make DESTDIR=%{_builddir}/%{name}-%{version}/curl-%{curlv}/target INSTALL="install -p" install
-popd
-%endif
-
-%if %{use_devtoolset}
-. /opt/rh/devtoolset-%{dts_version}/enable
-%endif
+# Disable R_LIBS_SITE force to an empty string (we always define it at the end if not set, and this breaks that)
+# Thanks R 4.2
+sed -i "s|R_LIBS_SITE=\${R_LIBS_SITE:-'%%S'}|#R_LIBS_SITE=\${R_LIBS_SITE:-'%%S'}|g" etc/Renviron.in
 
 # Add PATHS to Renviron for R_LIBS_SITE
 echo 'R_LIBS_SITE=${R_LIBS_SITE-'"'/usr/local/lib/R/site-library:/usr/local/lib/R/library:%{_libdir}/R/library:%{_datadir}/R/library'"'}' >> etc/Renviron.in
@@ -638,92 +379,16 @@ export R_PDFVIEWER="%{_bindir}/xdg-open"
 export R_PRINTCMD="lpr"
 export R_BROWSER="%{_bindir}/xdg-open"
 
-case "%{_target_cpu}" in
-      x86_64|mips64|ppc64|powerpc64|sparc64|s390x|powerpc64le|ppc64le)
-          export CC="gcc -m64"
-          export CXX="g++ -m64"
-          export F77="gfortran -m64"
-          export FC="gfortran -m64"
-      ;;
-      ia64|alpha|arm*|aarch64|sh*|riscv*)
-          export CC="gcc"
-          export CXX="g++"
-          export F77="gfortran"
-          export FC="gfortran"
-      ;;
-      s390)
-          export CC="gcc -m31"
-          export CXX="g++ -m31"
-          export F77="gfortran -m31"
-          export FC="gfortran -m31"
-      ;;
-      *)
-          export CC="gcc -m32"
-          export CXX="g++ -m32"
-          export F77="gfortran -m32"
-          export FC="gfortran -m32"
-      ;;
-esac
-
-%if 0%{?zlibhack}
-export CFLAGS="%{optflags} -fpic -fPIC -I%{_builddir}/%{name}-%{version}/zlib-%{zlibv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/bzip2-%{bzipv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/xz-%{xzv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_includedir}"
-# export LDFLAGS="-L%{_builddir}/%{name}-%{version}/zlib-%{zlibv}/target%{_libdir}/ -L%{_builddir}/%{name}-%{version}/bzip2-%{bzipv}/target%{_libdir}/ -L%{_builddir}/%{name}-%{version}/xz-%{xzv}/target%{_libdir}/ -L%{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target%{_libdir}/ -L%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_libdir}/"
-export CURL_CFLAGS='-DCURL_STATICLIB -I%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_includedir}'
-export CURL_LIBS=`%{_builddir}/%{name}-%{version}/curl-%{curlv}/target/usr/bin/curl-config --libs`
-export LDFLAGS="-ldl -lpthread -lc -lrt -Wl,--as-needed -Wl,--whole-archive %{_builddir}/%{name}-%{version}/zlib-%{zlibv}/target%{_libdir}/libz.a %{_builddir}/%{name}-%{version}/bzip2-%{bzipv}/target%{_libdir}/libbz2.a %{_builddir}/%{name}-%{version}/xz-%{xzv}/target%{_libdir}/liblzma.a %{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target%{_libdir}/libpcre.a %{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_libdir}/libcurl.a -Wl,--no-whole-archive -L%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_libdir}/ $CURL_LIBS"
-%endif
-
-%if 0%{?fedora} >= 21
-%if %{with_lto}
-# With gcc 4.9, if we don't pass -ffat-lto-objects along with -flto, Matrix builds without the needed object code
-# ... and doesn't work at all as a result.
-export CFLAGS="%{optflags} -ffat-lto-objects"
-export CXXFLAGS="%{optflags} -ffat-lto-objects"
-export FCFLAGS="%{optflags} -ffat-lto-objects"
-%endif
-%else
-export FCFLAGS="%{optflags}"
-%endif
-
-%if 0%{?fedora} >= 30
-# gcc9 needs us to pass --no-optimize-sibling-calls to gfortran
-export FCFLAGS="%{optflags} --no-optimize-sibling-calls"
-export FFLAGS="%{optflags} --no-optimize-sibling-calls"
-%endif
-
-# RHEL 5 & 6 & 7 have a broken BLAS, so we need to use the bundled bits in R until
-# they are fixed... and it doesn't look like it will ever be fixed in RHEL 5.
-# https://bugzilla.redhat.com/show_bug.cgi?id=1117491
-# https://bugzilla.redhat.com/show_bug.cgi?id=1117496
-# https://bugzilla.redhat.com/show_bug.cgi?id=1117497
-#
-# On old RHEL, we use --enable-BLAS-shlib here. It generates a shared library
-# of the R bundled blas, that can be replaced by an optimized version.
-# It also results in R using the bundled lapack copy.
-
-%if %{flexiblas}
+%if "%{blaslib}" == "flexiblas"
 # avoid this check
 sed -i '/"checking whether the BLAS is complete/i r_cv_complete_blas=yes' configure
 %endif
 
 ( %configure \
-%if 0%{?rhel} && 0%{?rhel} <= 5
-    --with-readline=no \
-%endif
-%if %{system_tre}
     --with-system-tre \
-%endif
     --with-system-valgrind-headers \
-%if %{syslapack}
     --with-lapack \
-%if %{flexiblas}
-    --with-blas="flexiblas" \
-%else
-    --with-blas \
-%endif
-%else
-    --enable-BLAS-shlib \
-%endif
+    --with-blas=%{blaslib}%{blasvar} \
     --with-tcl-config=%{_libdir}/tclConfig.sh \
     --with-tk-config=%{_libdir}/tkConfig.sh \
     --enable-R-shlib \
@@ -731,153 +396,92 @@ sed -i '/"checking whether the BLAS is complete/i r_cv_complete_blas=yes' config
     --enable-R-profiling \
     --enable-memory-profiling \
 %if %{with_lto}
-%ifnarch %{arm}
     --enable-lto \
 %endif
-%endif
-%if %{texi2any}
     MAKEINFO=texi2any \
-%else
-    MAKEINFO=makeinfo \
-%endif
     rdocdir=%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}} \
     rincludedir=%{_includedir}/R \
     rsharedir=%{_datadir}/R) | tee CONFIGURE.log
 cat CONFIGURE.log | grep -A30 'R is now' - > CAPABILITIES
-%if 0%{?zlibhack}
-make V=1 CURL_CPPFLAGS='-DCURL_STATICLIB -I%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_includedir}' CURL_LIBS=`%{_builddir}/%{name}-%{version}/curl-%{curlv}/target/usr/bin/curl-config --libs`
-%else
 make V=1
-%endif
 (cd src/nmath/standalone; make)
 #make check-all
 make pdf
-%if 0%{?fedora} >= 19
+
 # What a hack.
 # Current texinfo doesn't like @eqn. Use @math instead where stuff breaks.
 cp doc/manual/R-exts.texi doc/manual/R-exts.texi.spot
 cp doc/manual/R-intro.texi doc/manual/R-intro.texi.spot
 sed -i 's|@eqn|@math|g' doc/manual/R-exts.texi
 sed -i 's|@eqn|@math|g' doc/manual/R-intro.texi
-%endif
-%if %{texi2any}
-    make MAKEINFO=texi2any info
-%else
-# Well, this used to work, but now rhel 6 is too old and buggy.
-# make MAKEINFO=makeinfo info
-%endif
 
-%if %{texi2any}
+make MAKEINFO=texi2any info
+
 # Convert to UTF-8
 for i in doc/manual/R-intro.info doc/manual/R-FAQ.info doc/FAQ doc/manual/R-admin.info doc/manual/R-exts.info-1; do
   iconv -f iso-8859-1 -t utf-8 -o $i{.utf8,}
   mv $i{.utf8,}
 done
-%endif
 
 %install
-%if %{texi2any}
-make DESTDIR=${RPM_BUILD_ROOT} install install-info
-%else
-make DESTDIR=${RPM_BUILD_ROOT} install
-%endif
+make DESTDIR=%{buildroot} install install-info
+
 # And now, undo the hack. :P
-%if 0%{?fedora} >= 19
 mv doc/manual/R-exts.texi.spot doc/manual/R-exts.texi
 mv doc/manual/R-intro.texi.spot doc/manual/R-intro.texi
-%endif
-%if 0%{?zlibhack}
-# Ugh. Old ancient broken. Barf barf barf.
-%else
-make DESTDIR=${RPM_BUILD_ROOT} install-pdf
-%endif
 
-rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir
-rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir.old
-mkdir -p ${RPM_BUILD_ROOT}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
-install -p CAPABILITIES ${RPM_BUILD_ROOT}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
+make DESTDIR=%{buildroot} install-pdf
 
-#Install libRmath files
-(cd src/nmath/standalone; make install DESTDIR=${RPM_BUILD_ROOT})
+rm -f %{buildroot}%{_infodir}/dir
+rm -f %{buildroot}%{_infodir}/dir.old
+mkdir -p %{buildroot}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
+install -p CAPABILITIES %{buildroot}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
 
-mkdir -p $RPM_BUILD_ROOT/etc/ld.so.conf.d
-echo "%{_libdir}/R/lib" > $RPM_BUILD_ROOT/etc/ld.so.conf.d/%{name}-%{_arch}.conf
+# Install libRmath files
+(cd src/nmath/standalone; make install DESTDIR=%{buildroot})
 
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/R/library
+mkdir -p %{buildroot}/etc/ld.so.conf.d
+echo "%{_libdir}/R/lib" > %{buildroot}/etc/ld.so.conf.d/%{name}-%{_arch}.conf
+
+mkdir -p %{buildroot}%{_datadir}/R/library
 
 # Fix multilib
-touch -r README ${RPM_BUILD_ROOT}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}/CAPABILITIES
+touch -r README %{buildroot}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}/CAPABILITIES
 touch -r README doc/manual/*.pdf
-touch -r README $RPM_BUILD_ROOT%{_bindir}/R
+touch -r README %{buildroot}%{_bindir}/R
 
 # Fix html/packages.html
 # We can safely use RHOME here, because all of these are system packages.
-sed -i 's|\..\/\..|%{_libdir}/R|g' $RPM_BUILD_ROOT%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}/html/packages.html
+sed -i 's|\..\/\..|%{_libdir}/R|g' %{buildroot}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}/html/packages.html
 
-for i in $RPM_BUILD_ROOT%{_libdir}/R/library/*/html/*.html; do
+for i in %{buildroot}%{_libdir}/R/library/*/html/*.html; do
   sed -i 's|\..\/\..\/..\/doc|%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}|g' $i
 done
 
 # Fix exec bits
-chmod +x $RPM_BUILD_ROOT%{_datadir}/R/sh/echo.sh
-chmod +x $RPM_BUILD_ROOT%{_libdir}/R/bin/*
-chmod -x $RPM_BUILD_ROOT%{_libdir}/R/library/mgcv/CITATION ${RPM_BUILD_ROOT}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}/CAPABILITIES
+chmod +x %{buildroot}%{_datadir}/R/sh/echo.sh
+chmod +x %{buildroot}%{_libdir}/R/bin/*
+chmod -x %{buildroot}%{_libdir}/R/library/mgcv/CITATION %{buildroot}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}/CAPABILITIES
 
 
 # Symbolic link for convenience
-if [ ! -d "$RPM_BUILD_ROOT%{_libdir}/R/include" ]; then
-	pushd $RPM_BUILD_ROOT%{_libdir}/R
+if [ ! -d "%{buildroot}%{_libdir}/R/include" ]; then
+	pushd %{buildroot}%{_libdir}/R
 	ln -s ../../include/R include
 	popd
 fi
 
 # Symbolic link for LaTeX
-if [ ! -d "$RPM_BUILD_ROOT%{_datadir}/texmf/tex/latex/R" ]; then
-	mkdir -p $RPM_BUILD_ROOT%{_datadir}/texmf/tex/latex
-	pushd $RPM_BUILD_ROOT%{_datadir}/texmf/tex/latex
+if [ ! -d "%{buildroot}%{_datadir}/texmf/tex/latex/R" ]; then
+	mkdir -p %{buildroot}%{_datadir}/texmf/tex/latex
+	pushd %{buildroot}%{_datadir}/texmf/tex/latex
 	ln -s %{_datadir}/R/texmf/tex/latex R
 	popd
 fi
 
-%if %{texi2any}
-# Do not need to copy files...
-%else
-# COPY THAT FLOPPY
-cp -a %{SOURCE100} %{SOURCE101} %{SOURCE102} %{SOURCE103} %{SOURCE104} %{SOURCE105} %{SOURCE106} %{buildroot}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}/manual/
-%endif
-
-%if 0%{?zlibhack}
-# Clean our shameful shame out of the files.
-sed -i 's|-Wl,--whole-archive %{_builddir}/%{name}-%{version}/zlib-%{zlibv}/target%{_libdir}/libz.a %{_builddir}/%{name}-%{version}/bzip2-%{bzipv}/target%{_libdir}/libbz2.a %{_builddir}/%{name}-%{version}/xz-%{xzv}/target%{_libdir}/liblzma.a %{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target%{_libdir}/libpcre.a %{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_libdir}/libcurl.a -Wl,--no-whole-archive -L%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_libdir}/||g' %{buildroot}%{_libdir}/R/etc/Makeconf
-sed -i 's|-Wl,--whole-archive %{_builddir}/%{name}-%{version}/zlib-%{zlibv}/target%{_libdir}/libz.a %{_builddir}/%{name}-%{version}/bzip2-%{bzipv}/target%{_libdir}/libbz2.a %{_builddir}/%{name}-%{version}/xz-%{xzv}/target%{_libdir}/liblzma.a %{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target%{_libdir}/libpcre.a %{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_libdir}/libcurl.a -Wl,--no-whole-archive -L%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_libdir}/||g' %{buildroot}%{_libdir}/pkgconfig/libR.pc
-sed -i 's|-ldl -lpthread .* -lldap -lz -lrt||g' %{buildroot}%{_libdir}/R/etc/Makeconf
-sed -i 's|-ldl -lpthread .* -lldap -lz -lrt||g' %{buildroot}%{_libdir}/pkgconfig/libR.pc
-sed -i 's|-I%{_builddir}/%{name}-%{version}/zlib-%{zlibv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/bzip2-%{bzipv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/xz-%{xzv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_includedir}||g' %{buildroot}%{_libdir}/R/etc/Makeconf
-sed -i 's|-I%{_builddir}/%{name}-%{version}/zlib-%{zlibv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/bzip2-%{bzipv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/xz-%{xzv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_includedir}||g' %{buildroot}%{_libdir}/R/bin/libtool
-sed -i 's|-I%{_builddir}/%{name}-%{version}/zlib-%{zlibv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/bzip2-%{bzipv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/xz-%{xzv}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/pcre-%{pcrev}/target%{_includedir} -I%{_builddir}/%{name}-%{version}/curl-%{curlv}/target%{_includedir}||g' ${RPM_BUILD_ROOT}%{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}/CAPABILITIES
-#el6 FLIBS
-sed -i 's|-ldl -lpthread .* -lldap -lz||g' %{buildroot}%{_libdir}/R/etc/Makeconf
-#el5 FLIBS
-sed -i 's|-ldl -lpthread .* -lldap||g' %{buildroot}%{_libdir}/R/etc/Makeconf
-# ldpaths
-sed -i 's|:/builddir/build/BUILD/R-%{version}/curl-%{curlv}/target%{_libdir}/:/builddir/build/BUILD/R-%{version}/curl-%{curlv}/target%{_libdir}||g' %{buildroot}%{_libdir}/R/etc/ldpaths
-sed -i 's|/builddir/build/BUILD/R-%{version}/curl-%{curlv}/target%{_libdir}/:/builddir/build/BUILD/R-%{version}/curl-%{curlv}/target%{_libdir}||g' %{buildroot}%{_libdir}/R/etc/ldpaths
-%endif
-
-%if !%{syslapack}
-%if !%{flexiblas}
-%if %{openblas}
-# Rename the R blas so.
-mv %{buildroot}%{_libdir}/R/lib/libRblas.so %{buildroot}%{_libdir}/R/lib/libRrefblas.so
-%endif
-%endif
-%endif
-
 # okay, look. its very clear that upstream does not run the test suite on any non-intel architectures.
 %check
-%if 0%{?zlibhack}
-# Most of these tests pass. Some don't. All pieces belong to you.
-%else
+%if %{with tests}
 %ifnarch ppc64 ppc64le armv7hl s390x aarch64
 # Needed by tests/ok-error.R, which will smash the stack on PPC64. This is the purpose of the test.
 ulimit -s 16384
@@ -888,18 +492,6 @@ TZ="Europe/Paris" make check
 %post core
 /sbin/ldconfig
 
-# With 2.10.0, we no longer need to do any of this.
-
-# Update package indices
-# %__cat %{_libdir}/R/library/*/CONTENTS > %{_docdir}/R-%{version}/html/search/index.txt 2>/dev/null
-# Don't use .. based paths, substitute RHOME
-# sed -i "s!../../..!%{_libdir}/R!g" %{_docdir}/R-%{version}/html/search/index.txt
-
-# This could fail if there are no noarch R libraries on the system.
-# %__cat %{_datadir}/R/library/*/CONTENTS >> %{_docdir}/R-%{version}/html/search/index.txt 2>/dev/null || exit 0
-# Don't use .. based paths, substitute /usr/share/R
-# sed -i "s!../../..!/usr/share/R!g" %{_docdir}/R-%{version}/html/search/index.txt
-
 %postun core
 /sbin/ldconfig
 if [ $1 -eq 0 ] ; then
@@ -907,10 +499,12 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %posttrans core
+%ifarch %{java_arches}
 %{javareconf}
+%endif
 /usr/bin/mktexlsr %{_datadir}/texmf &>/dev/null || :
 
-%if %{modern}
+%ifarch %{java_arches}
 %posttrans java
 %{javareconf}
 
@@ -1158,7 +752,6 @@ fi
 %{_libdir}/R/library/nlme/html/
 %{_libdir}/R/library/nlme/INDEX
 %{_libdir}/R/library/nlme/libs/
-%{_libdir}/R/library/nlme/LICENCE
 %{_libdir}/R/library/nlme/Meta/
 %{_libdir}/R/library/nlme/mlbook/
 %{_libdir}/R/library/nlme/NAMESPACE
@@ -1250,9 +843,7 @@ fi
 %{_libdir}/R/COPYING
 # %%{_libdir}/R/NEWS*
 %{_libdir}/R/SVN-REVISION
-%if %{texi2any}
 %{_infodir}/R-*.info*
-%endif
 %{_mandir}/man1/*
 %{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
 %docdir %{?_pkgdocdir}%{!?_pkgdocdir:%{_docdir}/%{name}-%{version}}
@@ -1267,7 +858,7 @@ fi
 %files devel
 # Nothing, all files provided by R-core-devel
 
-%if %{modern}
+%ifarch %{java_arches}
 %files java
 # Nothing, all files provided by R-core
 
@@ -1287,6 +878,33 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Tue Aug 23 2022 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.1-4
+- Remove ancient (RHEL 5/6) zlibhack
+- Remove conditional paths for ancient RHEL (< 8) and Fedora (< 32)
+- Simplify Java and LTO handling
+- Simplify BLAS configuration, use openblas-openmp if flexiblas is not available
+- Cleanup Requires and BuildRequires + sorting + indentation
+- Remove unused files and patches
+- Remove redundant flags
+
+* Mon Aug  8 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-3
+- fix issue where Renviron was setting R_LIBS_SITE to an empty string, which makes it hard to find Fedora's noarch
+  packages being installed into /usr/share.
+
+* Mon Aug 01 2022 Frantisek Zatloukal <fzatlouk@redhat.com> - 4.2.1-2
+- Rebuilt for ICU 71.1
+
+* Wed Jul 27 2022 Tom Callaway <spot@fedoraproject.org> - 4.2.1-1
+- update to 4.2.1
+- disable the R test suite due to unknown failures on i686/x86_64 in koji (and only in koji)
+
+* Mon Jul 25 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.3-3
+- add new "usejava" conditional
+- do not "usejava" when Fedora >= 37 and i686
+
+* Wed Jul 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
 * Sat Mar 19 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.3-1
 - update to 4.1.3
 
