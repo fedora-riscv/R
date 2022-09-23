@@ -186,7 +186,7 @@ R CMD javareconf \\
 
 Name: R
 Version: %{major_version}.%{minor_version}.%{patch_version}
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A language for data analysis and graphics
 URL: http://www.r-project.org
 Source0: https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
@@ -715,7 +715,7 @@ sed -i '/"checking whether the BLAS is complete/i r_cv_complete_blas=yes' config
 %endif
     --with-system-valgrind-headers \
 %if %{syslapack}
-    --with-lapack \
+    --with-lapack="flexiblas" \
 %if %{flexiblas}
     --with-blas="flexiblas" \
 %else
@@ -1287,6 +1287,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Fri Sep 23 2022 Iñaki Úcar <iucar@fedoraproject.org> - 4.1.3-2
+- Add flexiblas to LAPACK_LIBS
+
 * Sat Mar 19 2022 Tom Callaway <spot@fedoraproject.org> - 4.1.3-1
 - update to 4.1.3
 
