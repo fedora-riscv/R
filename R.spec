@@ -17,12 +17,12 @@
 
 # We need at least gcc 10 anyway
 %global enable_lto 1
-%if %{without lto} || 0%{?rhel} < 9
+%if %{without lto} || (0%{?rhel} && 0%{?rhel} < 9)
 %global enable_lto 0
 %global _lto_cflags %nil
 %endif
 
-%if 0%{?fedora} >= 33 || (0%{?rhel} && 0%{?rhel} < 9)
+%if 0%{?fedora} >= 33 || 0%{?rhel} < 9
 %global blaslib flexiblas
 %global blasvar %{nil}
 %else
@@ -826,9 +826,9 @@ fi
 * Sat Nov 05 2022 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.2-4
 - Remove FlexiBLAS workaround, now officially supported
 - Re-enable tests in all platforms
+- Fix LTO flag once and for all (thanks, Mattias)
 
 * Sat Nov 05 2022 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.2-3
-- Fix LTO flag once and for all (thanks, Mattias)
 - Let R find its way into Java instead of specifying too many possible paths
 
 * Fri Nov 04 2022 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.2-2
