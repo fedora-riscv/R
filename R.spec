@@ -36,7 +36,7 @@
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPLv2+
@@ -356,11 +356,6 @@ export R_BROWSER="%{_bindir}/xdg-open"
 export JAVA_HOME=%{_jvmdir}/jre
 %endif
 
-%if "%{blaslib}" == "flexiblas"
-# avoid this check
-sed -i '/"checking whether the BLAS is complete/i r_cv_complete_blas=yes' configure
-%endif
-
 %configure \
   rdocdir=%{_pkgdocdir} \
   rincludedir=%{_includedir}/R \
@@ -444,12 +439,10 @@ fi
 
 %check
 %if %{with tests}
-# okay, look. its very clear that upstream does not run the test suite on any non-intel architectures.
-%ifnarch ppc64 ppc64le armv7hl s390x aarch64
-# Needed by tests/ok-error.R, which will smash the stack on PPC64. This is the purpose of the test.
+# Needed by tests/ok-error.R, which will smash the stack on PPC64.
+# This is the purpose of the test.
 ulimit -s 16384
 TZ="Europe/Paris" make check
-%endif
 %endif
 
 %post core
@@ -830,6 +823,10 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Sat Nov 05 2022 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.2-4
+- Remove FlexiBLAS workaround, now officially supported
+- Re-enable tests in all platforms
+
 * Sat Nov 05 2022 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.2-3
 - Fix LTO flag once and for all (thanks, Mattias)
 - Let R find its way into Java instead of specifying too many possible paths
