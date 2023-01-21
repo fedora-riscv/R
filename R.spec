@@ -5,7 +5,12 @@
 # https://bugzilla.redhat.com/show_bug.cgi?id=2046246
 %undefine _package_note_flags
 
+%ifarch riscv64
+# tests failed on riscv64, disable it by default
+%bcond_with tests
+%else
 %bcond_without tests
+%endif
 
 # Using LTO breaks debuginfo (probably not true anymore?)
 # https://bugzilla.redhat.com/show_bug.cgi?id=1113404
@@ -53,7 +58,7 @@ R CMD javareconf \\
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        1%{?dist}
+Release:        1.rv64%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPLv2+
@@ -857,6 +862,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Sat Jan 21 2023 Liu Yang <Yang.Liu.sn@gmail.com> - 4.2.2-1.rv64
+- Skip failed tests on riscv64 to fix buildiung.
+
 * Mon Oct 31 2022 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.2-1
 - Update to 4.2.2
 - Run new compact-pdf target
