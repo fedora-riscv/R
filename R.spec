@@ -5,7 +5,12 @@
 # https://bugzilla.redhat.com/show_bug.cgi?id=2046246
 %undefine _package_note_flags
 
+# EPEL-only issues in some architectures (gcc < 12?)
+%if 0%{?rhel} && "%{_arch}" != "x86_64"
+%bcond_with tests
+%else
 %bcond_without tests
+%endif
 
 # Using LTO breaks debuginfo (probably not true anymore?)
 # https://bugzilla.redhat.com/show_bug.cgi?id=1113404
@@ -826,6 +831,7 @@ fi
 * Wed Mar 15 2023 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.3-1
 - Update to 4.2.3
 - Adapt license tag to SPDX
+- Disable tests for non x86_64 architectures in EPEL
 
 * Wed Jan 18 2023 Fedora Release Engineering <releng@fedoraproject.org> - 4.2.2-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
