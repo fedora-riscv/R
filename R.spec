@@ -32,14 +32,14 @@
 
 %global major_version 4
 %global minor_version 2
-%global patch_version 2
+%global patch_version 3
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        7%{?dist}
+Release:        1%{?dist}
 Summary:        A language for data analysis and graphics
 
-License:        GPLv2+
+License:        GPL-2.0-or-later
 URL:            https://www.r-project.org
 Source0:        https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
 # see https://bugzilla.redhat.com/show_bug.cgi?id=1324145
@@ -150,31 +150,31 @@ Provides:       R(ABI) = %{major_version}.%{minor_version}
 }
 %add_submodule  base %{version}
 %add_submodule  boot 1.3-28
-%add_submodule  class 7.3-20
+%add_submodule  class 7.3-21
 %add_submodule  cluster 2.1.4
-%add_submodule  codetools 0.2-18
+%add_submodule  codetools 0.2-19
 %add_submodule  compiler %{version}
 %add_submodule  datasets %{version}
-%add_submodule  foreign 0.8-83
+%add_submodule  foreign 0.8-84
 %add_submodule  graphics %{version}
 %add_submodule  grDevices %{version}
 %add_submodule  grid %{version}
 %add_submodule  KernSmooth 2.23-20
 %add_submodule  lattice 0.20-45
-%add_submodule  MASS 7.3-58.1
-%add_submodule  Matrix 1.5-1
+%add_submodule  MASS 7.3-58.2
+%add_submodule  Matrix 1.5-3
 Obsoletes:      R-Matrix < 0.999375-7
 %add_submodule  methods %{version}
-%add_submodule  mgcv 1.8-41
-%add_submodule  nlme 3.1-160
+%add_submodule  mgcv 1.8-42
+%add_submodule  nlme 3.1-162
 %add_submodule  nnet 7.3-18
 %add_submodule  parallel %{version}
 %add_submodule  rpart 4.1.19
-%add_submodule  spatial 7.3-15
+%add_submodule  spatial 7.3-16
 %add_submodule  splines %{version}
 %add_submodule  stats %{version}
 %add_submodule  stats4 %{version}
-%add_submodule  survival 3.4-0
+%add_submodule  survival 3.5-3
 %add_submodule  tcltk %{version}
 %add_submodule  tools %{version}
 %add_submodule  translations %{version}
@@ -230,7 +230,7 @@ Requires:       tex(inconsolata.sty)
 Requires:       qpdf
 %endif
 
-Provides:       R-Matrix-devel = 1.5.1
+Provides:       R-Matrix-devel = 1.5.3
 Obsoletes:      R-Matrix-devel < 0.999375-7
 
 %ifarch %{java_arches}
@@ -823,6 +823,10 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Wed Mar 15 2023 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.3-1
+- Update to 4.2.3
+- Adapt license tag to SPDX
+
 * Wed Jan 18 2023 Fedora Release Engineering <releng@fedoraproject.org> - 4.2.2-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
 
