@@ -28,7 +28,7 @@
 %endif
 
 # Should be the previous version, to make mass-rebuilds easier
-%bcond_without bootstrap
+%bcond_with bootstrap
 %global bootstrap_abi 4.2
 
 %global major_version 4
