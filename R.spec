@@ -5,7 +5,11 @@
 # https://bugzilla.redhat.com/show_bug.cgi?id=2046246
 %undefine _package_note_flags
 
+%ifarch riscv64
+%bcond_with tests
+%else
 %bcond_without tests
+%endif
 
 # Using LTO breaks debuginfo (probably not true anymore?)
 # https://bugzilla.redhat.com/show_bug.cgi?id=1113404
@@ -36,7 +40,7 @@
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        1%{?dist}
+Release:        1.rv64%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPL-2.0-or-later
@@ -823,6 +827,9 @@ fi
 %{_libdir}/libRmath.a
 
 %changelog
+* Tue May 23 2023 Liu Yang <Yang.Liu.sn@gmail.com> - 4.2.3-1.rv64
+- Fix build on riscv64
+
 * Wed Mar 15 2023 Iñaki Úcar <iucar@fedoraproject.org> - 4.2.3-1
 - Update to 4.2.3
 - Adapt license tag to SPDX
