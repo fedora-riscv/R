@@ -18,9 +18,7 @@
 %endif
 
 # We need at least gcc 10
-%global enable_lto 1
 %if 0%{?rhel} && 0%{?rhel} < 9
-%global enable_lto 0
 %global _lto_cflags %nil
 %endif
 
@@ -38,7 +36,7 @@
 
 %global major_version 4
 %global minor_version 3
-%global patch_version 0
+%global patch_version 2
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
@@ -143,31 +141,31 @@ Provides:       R(ABI) = %{bootstrap_abi}
 }
 %add_submodule  base %{version}
 %add_submodule  boot 1.3-28.1
-%add_submodule  class 7.3-21
+%add_submodule  class 7.3-22
 %add_submodule  cluster 2.1.4
 %add_submodule  codetools 0.2-19
 %add_submodule  compiler %{version}
 %add_submodule  datasets %{version}
-%add_submodule  foreign 0.8-84
+%add_submodule  foreign 0.8-85
 %add_submodule  graphics %{version}
 %add_submodule  grDevices %{version}
 %add_submodule  grid %{version}
-%add_submodule  KernSmooth 2.23-20
-%add_submodule  lattice 0.21-8
-%add_submodule  MASS 7.3-58.4
-%add_submodule  Matrix 1.5-4
+%add_submodule  KernSmooth 2.23-22
+%add_submodule  lattice 0.21-9
+%add_submodule  MASS 7.3-60
+%add_submodule  Matrix 1.6-1.1
 Obsoletes:      R-Matrix < 0.999375-7
 %add_submodule  methods %{version}
-%add_submodule  mgcv 1.8-42
-%add_submodule  nlme 3.1-162
-%add_submodule  nnet 7.3-18
+%add_submodule  mgcv 1.9-0
+%add_submodule  nlme 3.1-163
+%add_submodule  nnet 7.3-19
 %add_submodule  parallel %{version}
-%add_submodule  rpart 4.1.19
-%add_submodule  spatial 7.3-16
+%add_submodule  rpart 4.1.21
+%add_submodule  spatial 7.3-17
 %add_submodule  splines %{version}
 %add_submodule  stats %{version}
 %add_submodule  stats4 %{version}
-%add_submodule  survival 3.5-5
+%add_submodule  survival 3.5-7
 %add_submodule  tcltk %{version}
 %add_submodule  tools %{version}
 %add_submodule  translations %{version}
@@ -211,6 +209,8 @@ Requires:       libicu-devel
 Requires:       libtirpc-devel
 Recommends:     tex(latex)
 Recommends:     texinfo-tex
+Recommends:     tidy
+Recommends:     devscripts-checkbashisms
 %if 0%{?fedora}
 # No inconsolata on RHEL tex
 Recommends:     tex(inconsolata.sty)
@@ -219,7 +219,7 @@ Recommends:     tex(inconsolata.sty)
 Recommends:     qpdf
 %endif
 
-Provides:       R-Matrix-devel = 1.5.4
+Provides:       R-Matrix-devel = 1.6.1.1
 Obsoletes:      R-Matrix-devel < 0.999375-7
 
 %ifarch %{java_arches}
@@ -330,9 +330,6 @@ export JAVA_HOME=%{_jvmdir}/jre
   rincludedir=%{_includedir}/R \
   rsharedir=%{_datadir}/R \
   --with-system-tre \
-%ifarch %{valgrind_arches}
-  --with-system-valgrind-headers \
-%endif
   --with-lapack=%{blaslib}%{blasvar} \
   --with-blas=%{blaslib}%{blasvar} \
   --with-tcl-config=%{_libdir}/tclConfig.sh \
@@ -341,9 +338,6 @@ export JAVA_HOME=%{_jvmdir}/jre
   --enable-prebuilt-html \
   --enable-R-profiling \
   --enable-memory-profiling \
-%if %{enable_lto}
-  --enable-lto \
-%endif
   | tee CONFIGURE.log
 cat CONFIGURE.log | grep -A30 'R is now' - > CAPABILITIES
 make V=1
@@ -676,11 +670,9 @@ TZ="Europe/Paris" make check
 %{_libdir}/R/library/MASS/scripts/
 # Matrix
 %dir %{_libdir}/R/library/Matrix/
-%license %{_libdir}/R/library/Matrix/Copyrights
 %{_libdir}/R/library/Matrix/data/
 %{_libdir}/R/library/Matrix/DESCRIPTION
 %doc %{_libdir}/R/library/Matrix/doc/
-%{_libdir}/R/library/Matrix/Doxyfile
 %{_libdir}/R/library/Matrix/external/
 %{_libdir}/R/library/Matrix/help/
 %doc %{_libdir}/R/library/Matrix/html/
@@ -728,6 +720,7 @@ TZ="Europe/Paris" make check
 %lang(de) %{_libdir}/R/library/mgcv/po/de/
 %lang(en) %{_libdir}/R/library/mgcv/po/en*/
 %lang(fr) %{_libdir}/R/library/mgcv/po/fr/
+%lang(it) %{_libdir}/R/library/mgcv/po/it/
 %lang(ko) %{_libdir}/R/library/mgcv/po/ko/
 %lang(pl) %{_libdir}/R/library/mgcv/po/pl/
 %{_libdir}/R/library/mgcv/R/
@@ -868,7 +861,7 @@ TZ="Europe/Paris" make check
 %{_libdir}/R/library/survival/libs/
 %{_libdir}/R/library/survival/Meta/
 %{_libdir}/R/library/survival/NAMESPACE
-%doc %{_libdir}/R/library/survival/NEWS.Rd
+%doc %{_libdir}/R/library/survival/NEWS.Rd*
 %{_libdir}/R/library/survival/R/
 # tcltk
 %dir %{_libdir}/R/library/tcltk/
@@ -946,6 +939,18 @@ TZ="Europe/Paris" make check
 %{_libdir}/libRmath.a
 
 %changelog
+* Tue Oct 31 2023 Iñaki Úcar <iucar@fedoraproject.org> - 4.3.2-1
+- Update to 4.3.2
+
+* Wed Jul 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 4.3.1-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Tue Jul 11 2023 František Zatloukal <fzatlouk@redhat.com> - 4.3.1-2
+- Rebuilt for ICU 73.2
+
+* Fri Jun 16 2023 Iñaki Úcar <iucar@fedoraproject.org> - 4.3.1-1
+- Update to 4.3.1
+
 * Sat Jan 21 2023 Liu Yang <Yang.Liu.sn@gmail.com> - 4.3.0-1.rv64
 - cherry-pick riscv64 build fix for latest upstream version.
 
