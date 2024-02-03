@@ -40,7 +40,7 @@
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        1.rv64%{?dist}
+Release:        1.rv64.rvrebuild0%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPL-2.0-or-later
