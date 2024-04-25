@@ -26,12 +26,12 @@
 %endif
 
 # Should be the previous version, to make mass-rebuilds easier
-%bcond_with bootstrap
-%global bootstrap_abi 4.2
+%bcond_without bootstrap
+%global bootstrap_abi 4.3
 
 %global major_version 4
-%global minor_version 3
-%global patch_version 3
+%global minor_version 4
+%global patch_version 0
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
@@ -135,10 +135,10 @@ Provides:       R(ABI) = %{bootstrap_abi}
   print("Provides: R(" .. name .. ") = " .. rpm_version)
 }
 %add_submodule  base %{version}
-%add_submodule  boot 1.3-29
+%add_submodule  boot 1.3-30
 %add_submodule  class 7.3-22
 %add_submodule  cluster 2.1.6
-%add_submodule  codetools 0.2-19
+%add_submodule  codetools 0.2-20
 %add_submodule  compiler %{version}
 %add_submodule  datasets %{version}
 %add_submodule  foreign 0.8-86
@@ -146,9 +146,9 @@ Provides:       R(ABI) = %{bootstrap_abi}
 %add_submodule  grDevices %{version}
 %add_submodule  grid %{version}
 %add_submodule  KernSmooth 2.23-22
-%add_submodule  lattice 0.22-5
-%add_submodule  MASS 7.3-60.0.1
-%add_submodule  Matrix 1.6-5
+%add_submodule  lattice 0.22-6
+%add_submodule  MASS 7.3-60.2
+%add_submodule  Matrix 1.7-0
 Obsoletes:      R-Matrix < 0.999375-7
 %add_submodule  methods %{version}
 %add_submodule  mgcv 1.9-1
@@ -214,7 +214,7 @@ Recommends:     tex(inconsolata.sty)
 Recommends:     qpdf
 %endif
 
-Provides:       R-Matrix-devel = 1.6.5
+Provides:       R-Matrix-devel = 1.7.0
 Obsoletes:      R-Matrix-devel < 0.999375-7
 
 %ifarch %{java_arches}
@@ -434,21 +434,30 @@ TZ="Europe/Paris" make check
 %dir %{_libdir}/R/library/
 %dir %{_libdir}/R/library/translations/
 %{_libdir}/R/library/translations/DESCRIPTION
+%lang(ar) %{_libdir}/R/library/translations/ar/
+%lang(bn) %{_libdir}/R/library/translations/bn/
+%lang(ca) %{_libdir}/R/library/translations/ca/
 %lang(da) %{_libdir}/R/library/translations/da/
 %lang(de) %{_libdir}/R/library/translations/de/
 %lang(en) %{_libdir}/R/library/translations/en*/
 %lang(es) %{_libdir}/R/library/translations/es/
 %lang(fa) %{_libdir}/R/library/translations/fa/
 %lang(fr) %{_libdir}/R/library/translations/fr/
+%lang(hi) %{_libdir}/R/library/translations/hi/
+%lang(hu) %{_libdir}/R/library/translations/hu/
+%lang(id) %{_libdir}/R/library/translations/id/
 %lang(it) %{_libdir}/R/library/translations/it/
 %lang(ja) %{_libdir}/R/library/translations/ja/
 %lang(ko) %{_libdir}/R/library/translations/ko/
 %lang(lt) %{_libdir}/R/library/translations/lt/
+%lang(ne) %{_libdir}/R/library/translations/ne/
 %lang(nn) %{_libdir}/R/library/translations/nn/
 %lang(pl) %{_libdir}/R/library/translations/pl/
 %lang(pt) %{_libdir}/R/library/translations/pt*/
 %lang(ru) %{_libdir}/R/library/translations/ru/
+%lang(sq) %{_libdir}/R/library/translations/sq/
 %lang(tr) %{_libdir}/R/library/translations/tr/
+%lang(ur) %{_libdir}/R/library/translations/ur/
 %lang(zh) %{_libdir}/R/library/translations/zh*/
 # base
 %dir %{_libdir}/R/library/base/
@@ -687,6 +696,7 @@ TZ="Europe/Paris" make check
 %lang(lt) %{_libdir}/R/library/Matrix/po/lt/
 %lang(pl) %{_libdir}/R/library/Matrix/po/pl/
 %{_libdir}/R/library/Matrix/R/
+%{_libdir}/R/library/Matrix/scripts/
 %{_libdir}/R/library/Matrix/test-tools.R
 %{_libdir}/R/library/Matrix/test-tools-1.R
 %{_libdir}/R/library/Matrix/test-tools-Matrix.R
@@ -933,6 +943,9 @@ TZ="Europe/Paris" make check
 %{_libdir}/libRmath.a
 
 %changelog
+* Thu Apr 25 2024 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.0-1
+- Update to 4.4.0
+
 * Thu Feb 29 2024 Iñaki Úcar <iucar@fedoraproject.org> - 4.3.3-1
 - Update to 4.3.3
 
