@@ -9,7 +9,7 @@
 %if 0%{?rhel} && "%{_arch}" != "x86_64"
 %bcond_with tests
 %else
-%bcond_without tests
+%bcond_with tests
 %endif
 
 # We need at least gcc 10
@@ -35,7 +35,7 @@
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        1%{?dist}
+Release:        1.rv64_nc%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPL-2.0-or-later
