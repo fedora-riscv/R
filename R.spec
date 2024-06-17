@@ -31,7 +31,7 @@
 
 %global major_version 4
 %global minor_version 4
-%global patch_version 0
+%global patch_version 1
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
@@ -145,7 +145,7 @@ Provides:       R(ABI) = %{bootstrap_abi}
 %add_submodule  graphics %{version}
 %add_submodule  grDevices %{version}
 %add_submodule  grid %{version}
-%add_submodule  KernSmooth 2.23-22
+%add_submodule  KernSmooth 2.23-24
 %add_submodule  lattice 0.22-6
 %add_submodule  MASS 7.3-60.2
 %add_submodule  Matrix 1.7-0
@@ -160,7 +160,7 @@ Obsoletes:      R-Matrix < 0.999375-7
 %add_submodule  splines %{version}
 %add_submodule  stats %{version}
 %add_submodule  stats4 %{version}
-%add_submodule  survival 3.5-8
+%add_submodule  survival 3.6-4
 %add_submodule  tcltk %{version}
 %add_submodule  tools %{version}
 %add_submodule  translations %{version}
@@ -943,6 +943,9 @@ TZ="Europe/Paris" make check
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Jun 17 2024 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.1-1
+- Update to 4.4.1
+
 * Thu Apr 25 2024 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.0-1
 - Update to 4.4.0
 
