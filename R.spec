@@ -35,7 +35,7 @@
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPL-2.0-or-later
@@ -198,6 +198,7 @@ Requires:       pcre2-devel
 Requires:       bzip2-devel
 Requires:       xz-devel
 Requires:       zlib-devel
+Requires:       libdeflate-devel
 Requires:       tre-devel
 Requires:       %{blaslib}-devel
 Requires:       libX11-devel
@@ -944,6 +945,9 @@ TZ="Europe/Paris" make check
 %{_libdir}/libRmath.a
 
 %changelog
+* Fri Jul 05 2024 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.1-3
+- Add libdeflate to Requires too
+
 * Thu Jul 04 2024 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.1-2
 - Enable libdeflate
 
