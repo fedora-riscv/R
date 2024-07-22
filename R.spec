@@ -35,7 +35,7 @@
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPL-2.0-or-later
@@ -79,6 +79,7 @@ BuildRequires:  java-devel
 BuildRequires:  autoconf
 BuildRequires:  automake
 BuildRequires:  libtool
+BuildRequires:  less
 BuildRequires:  tex(latex)
 BuildRequires:  texinfo-tex
 BuildRequires:  tex(upquote.sty)
@@ -110,6 +111,7 @@ and called at run time.
 %package core
 Summary:        The minimal R components necessary for a functional runtime
 Requires:       libRmath%{?_isa} = %{version}-%{release}
+Requires:       less
 Requires:       xdg-utils
 Requires:       zip, unzip
 
@@ -945,6 +947,9 @@ TZ="Europe/Paris" make check
 %{_libdir}/libRmath.a
 
 %changelog
+* Mon Jul 22 2024 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.1-5
+- Add less back as default PAGER
+
 * Wed Jul 17 2024 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.1-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
 
