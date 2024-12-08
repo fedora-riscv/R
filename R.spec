@@ -35,7 +35,7 @@
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPL-2.0-or-later
@@ -947,6 +947,9 @@ TZ="Europe/Paris" make check
 %{_libdir}/libRmath.a
 
 %changelog
+* Sun Dec 08 2024 Pete Walter <pwalter@fedoraproject.org> - 4.4.2-2
+- Rebuild for ICU 76
+
 * Fri Nov 01 2024 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.2-1
 - Update to 4.4.2
 
