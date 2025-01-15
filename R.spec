@@ -53,8 +53,8 @@ BuildRequires:  cairo-devel
 BuildRequires:  pango-devel
 BuildRequires:  readline-devel
 # Until upstream adds support for tcl/tk 9
-BuildRequires:  tcl8-devel
-BuildRequires:  tk8-devel
+BuildRequires:  tcl-devel
+BuildRequires:  tk-devel
 BuildRequires:  ncurses-devel
 BuildRequires:  pcre2-devel
 BuildRequires:  libcurl-devel
@@ -196,8 +196,8 @@ Requires:       gcc-c++
 Requires:       make
 Requires:       pkgconfig
 # Until upstream adds support for tcl/tk 9
-Requires:       tcl8-devel
-Requires:       tk8-devel
+Requires:       tcl-devel
+Requires:       tk-devel
 Requires:       pcre2-devel
 Requires:       bzip2-devel
 Requires:       xz-devel
