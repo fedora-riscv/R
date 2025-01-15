@@ -43,6 +43,7 @@ URL:            https://www.r-project.org
 Source0:        https://cran.r-project.org/src/base/R-4/R-%{version}.tar.gz
 # see https://bugzilla.redhat.com/show_bug.cgi?id=1324145
 Patch0:         R-3.3.0-fix-java_path-in-javareconf.patch
+Patch1:         R-4.4.2-gcc15-noreturn.patch
 
 BuildRequires:  gcc-gfortran
 BuildRequires:  gcc-c++
@@ -309,6 +310,7 @@ from the R project.  This package provides the static libRmath library.
 %prep
 %setup -q
 %patch -P0 -p1 -b .fixpath
+%patch -P1 -p1 -b .noreturn
 
 %build
 # Comment out default R_LIBS_SITE (since R 4.2) and set our own as always
@@ -951,6 +953,7 @@ TZ="Europe/Paris" make check
 %changelog
 * Wed Jan 15 2025 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.2-3
 - Depend on compat tcl/tk 8 for now
+- Apply upstream patch for gcc15 compatibility
 
 * Sun Dec 08 2024 Pete Walter <pwalter@fedoraproject.org> - 4.4.2-2
 - Rebuild for ICU 76

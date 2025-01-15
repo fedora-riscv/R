@@ -1,0 +1,30 @@
+From f79236d04e7c3c2e273baa38312b10d9786eca82 Mon Sep 17 00:00:00 2001
+From: ripley <ripley@00db46b3-68df-0310-9c12-caf00c1e9a41>
+Date: Sun, 1 Dec 2024 10:11:10 +0000
+Subject: [PATCH] gcc pre-15 does not yet support [[noreturn]]
+
+git-svn-id: https://svn.r-project.org/R/trunk@87411 00db46b3-68df-0310-9c12-caf00c1e9a41
+---
+ src/include/R_ext/Error.h | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/include/R_ext/Error.h b/src/include/R_ext/Error.h
+index 88ec979baf4..9382fd95263 100644
+--- a/src/include/R_ext/Error.h
++++ b/src/include/R_ext/Error.h
+@@ -41,10 +41,14 @@ extern "C" {
+ 
+ /* C23 has a [[noreturn]] attribute supported in GCC 13 and LLVM clang
+  * 15 with -std=c2x but not Apple clang 14.  All have version 202000L.
++ * clang 19 has version 202301L
++ * gcc pre-15 supports -std=gnu23 with version 202301L but does not
++ * support (and barfs on) this attribute, so restrict to clang for now.
++ *
+  * In C11 there is _Noreturn * (or noreturn in header <stdnoreturn.h>).
+  */
+ #if defined NORET
+-#elif (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202301L)
++#elif (defined(__clang__) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202301L)
+ # define NORET [[noreturn]]
+ #elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201102L
+ # define NORET _Noreturn
