@@ -35,7 +35,7 @@
 
 Name:           R
 Version:        %{major_version}.%{minor_version}.%{patch_version}
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A language for data analysis and graphics
 
 License:        GPL-2.0-or-later
@@ -52,8 +52,9 @@ BuildRequires:  libtiff-devel
 BuildRequires:  cairo-devel
 BuildRequires:  pango-devel
 BuildRequires:  readline-devel
-BuildRequires:  tcl-devel
-BuildRequires:  tk-devel
+# Until upstream adds support for tcl/tk 9
+BuildRequires:  tcl-devel < 9
+BuildRequires:  tk-devel < 9
 BuildRequires:  ncurses-devel
 BuildRequires:  pcre2-devel
 BuildRequires:  libcurl-devel
@@ -194,8 +195,9 @@ Requires:       gcc-gfortran
 Requires:       gcc-c++
 Requires:       make
 Requires:       pkgconfig
-Requires:       tcl-devel
-Requires:       tk-devel
+# Until upstream adds support for tcl/tk 9
+Requires:       tcl-devel < 9
+Requires:       tk-devel < 9
 Requires:       pcre2-devel
 Requires:       bzip2-devel
 Requires:       xz-devel
@@ -947,6 +949,9 @@ TZ="Europe/Paris" make check
 %{_libdir}/libRmath.a
 
 %changelog
+* Wed Jan 15 2025 Iñaki Úcar <iucar@fedoraproject.org> - 4.4.2-3
+- Depend on compat tcl/tk 8 for now
+
 * Sun Dec 08 2024 Pete Walter <pwalter@fedoraproject.org> - 4.4.2-2
 - Rebuild for ICU 76
 
